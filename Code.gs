@@ -21,6 +21,7 @@ function onOpen() {
   // Or DocumentApp, SlidesApp or FormApp.
   ui.createMenu('Custom Menu')
       .addItem('popup', 'creation_popup')
+      .addItem('refresh participants', 'gather_participants')
       .addSeparator()
       .addSubMenu(ui.createMenu('Sub-menu')
           .addItem('Second item', 'menuItem2'))
@@ -147,5 +148,5 @@ function create_new_page( params )
   columns_added = add_columns( new_sheet, params );
   add_rows( new_sheet, params, columns_added );
 
-  myFunction();
+  gather_participants();
 }
