@@ -36,6 +36,9 @@ function creation_popup()
   SpreadsheetApp.getUi().showModalDialog(html,'Nouvelle page');
 }
 
+/* **********************************************************
+*  Helper function that adds a named column after the given one and returns the new column id
+*/
 function add_column( sheet, preceding_column, name )
 {
   new_column = preceding_column + 1;
@@ -44,8 +47,81 @@ function add_column( sheet, preceding_column, name )
   return new_column;
 }
 
-function create_new_page( params ) {
-  
+/* **********************************************************
+*  Add all the columns selected by the user in the new table
+*  Returns the number of added columns
+*/
+function add_columns( sheet, params )
+{
+  column = MODEL_TABLE_VERSION_COL;
+  columns_added = 0;
+
+  if( params.estimate || params.delta )
+  {
+    column = add_column( sheet, column, "Estimation" );
+    sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Estimation du temps que prendra le jeu, format hh:mm:ss" );
+    new_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
+    new_range.setNumberFormat( "[h]:mm:ss" );
+    ++columns_added;
+  }
+  if( params.played || params.delta )
+  {
+    column = add_column( sheet, column, "Temps Passé" );
+    sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Temps passé sur le jeu, format hh:mm:ss" );
+    new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
+    new_range.setNumberFormat("[h]:mm:ss");
+    ++columns_added;
+  }
+  if( params.delta )
+  {
+    column = add_column( sheet, column, "Différence");
+    sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé" );
+    new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
+    new_range.setNumberFormat("[h]:mm:ss");
+    new_range.setValue( "=if(A" + MODEL_TABLE_FIRST_ROW + " = \"Terminé\";if(isblank(H" + MODEL_TABLE_FIRST_ROW + ");;H" + MODEL_TABLE_FIRST_ROW + "-G" + MODEL_TABLE_FIRST_ROW + ");)" );
+    ++columns_added;
+  }
+  if( params.rating )
+  {
+    column = add_column( sheet, column, "Note" );
+    new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
+    ++columns_added;
+  }
+  if( params.verdict )
+  {
+    column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, "Verdict" );
+    new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
+    ++columns_added;
+  }
+
+  return columns_added;
+}
+
+/* **********************************************************
+*  Add the necessary number of rows to the table according to birth year and season number
+*/
+function add_rows( sheet, params, columns_added )
+{
+  sheet.getRange(MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL).setValue( params.birth_year );
+  model_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, MODEL_TABLE_WIDTH + columns_added );
+
+  row = MODEL_TABLE_FIRST_ROW + 1;
+  year = sheet.getRange( MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL ).getValue() + 1;
+
+  for(; year <= params.season; ++year, ++row )
+  {
+    model_range.copyTo( sheet.getRange( row, 1 ) );
+    sheet.getRange( row, MODEL_TABLE_YEAR_COL ).setValue( year );
+  }
+
+  sheet.setRowHeightsForced( MODEL_TABLE_FIRST_ROW, row - MODEL_TABLE_FIRST_ROW, DEFAULT_ROW_HEIGHT );
+}
+
+/* **********************************************************
+*  New page creation function, called from the new page popup
+*/
+function create_new_page( params )
+{
  /* const params = {
     season: 2025,
     birth_year: 1991,
@@ -65,59 +141,7 @@ function create_new_page( params ) {
   {
     new_sheet.setName( params.pseudo );
   }
-  
-  new_sheet.getRange(MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL).setValue( params.birth_year );
 
-  column = MODEL_TABLE_VERSION_COL;
-  columns_added = 0;
-
-  if( params.estimate || params.delta )
-  {
-    column = add_column( new_sheet, column, "Estimation" );
-    new_sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Estimation du temps que prendra le jeu, format hh:mm:ss" );
-    new_range = new_sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
-    new_range.setNumberFormat( "[h]:mm:ss" );
-    ++columns_added;
-  }
-  if( params.played || params.delta )
-  {
-    column = add_column( new_sheet, column, "Temps Passé" );
-    new_sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Temps passé sur le jeu, format hh:mm:ss" );
-    new_range = new_sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
-    new_range.setNumberFormat("[h]:mm:ss");
-    ++columns_added;
-  }
-  if( params.delta )
-  {
-    column = add_column( new_sheet, column, "Différence");
-    new_sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé" );
-    new_range = new_sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
-    new_range.setNumberFormat("[h]:mm:ss");
-    new_range.setValue( "=if(A" + MODEL_TABLE_FIRST_ROW + " = \"Terminé\";if(isblank(H" + MODEL_TABLE_FIRST_ROW + ");;H" + MODEL_TABLE_FIRST_ROW + "-G" + MODEL_TABLE_FIRST_ROW + ");)" );
-    ++columns_added;
-  }
-  if( params.rating )
-  {
-    column = add_column( new_sheet, column, "Note" );
-    new_range = new_sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
-    ++columns_added;
-  }
-  if( params.verdict )
-  {
-    column = add_column( new_sheet, MODEL_TABLE_COM_COL + columns_added, "Verdict" );
-    new_range = new_sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
-    ++columns_added;
-  }
-
-  model_range = new_sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, MODEL_TABLE_WIDTH + columns_added );
-
-  row = MODEL_TABLE_FIRST_ROW + 1;
-  year = new_sheet.getRange( MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL ).getValue() + 1;
-  for(; year <= params.season; ++year, ++row )
-  {
-    model_range.copyTo( new_sheet.getRange( row, 1 ) );
-    new_sheet.getRange( row, MODEL_TABLE_YEAR_COL ).setValue( year );
-  }
-
-  new_sheet.setRowHeightsForced( MODEL_TABLE_FIRST_ROW, row - MODEL_TABLE_FIRST_ROW, DEFAULT_ROW_HEIGHT );
+  columns_added = add_columns( new_sheet, params );
+  add_rows( new_sheet, params, columns_added );
 }
