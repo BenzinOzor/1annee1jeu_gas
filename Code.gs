@@ -6,6 +6,8 @@ const completion = [
   "Remplacé"
 ];
 
+const MODEL_SHEET_NAME = "⚙️ Modèle";
+
 const MODEL_TABLE_HEADER_ROW = 6;
 const MODEL_TABLE_FIRST_ROW = 7;
 const MODEL_TABLE_YEAR_COL = 2;
@@ -133,7 +135,7 @@ function create_new_page( params )
   }*/
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const model_sheet = ss.getSheetByName("⚙️ Modèle");
+  const model_sheet = ss.getSheetByName( MODEL_SHEET_NAME );
   new_sheet = model_sheet.copyTo(ss);
   ss.setActiveSheet(new_sheet);
 
@@ -144,4 +146,6 @@ function create_new_page( params )
 
   columns_added = add_columns( new_sheet, params );
   add_rows( new_sheet, params, columns_added );
+
+  myFunction();
 }
