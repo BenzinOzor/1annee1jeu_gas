@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+
+    <script>
+
+      function on_creation_submit( formObject )
+      {
+        var params = {
+          pseudo: formObject.pseudo.value,
+          season: formObject.season.value,
+          birth_year: formObject.birth_year.value,
+          estimate: formObject.estimate.checked,
+          played: formObject.played.checked,
+          delta: formObject.delta.checked,
+          rating: formObject.rating.checked,
+          verdict: formObject.verdict.checked
+        }
+
+        google.script.run.create_new_page( params );
+        google.script.host.close();
+      }
+
+    </script>
+
+    <form id="creation_form" onsubmit="on_creation_submit( this )">
+      <label>Pseudo</label>
+      </br>
+      <input id="pseudo" name="pseudo" type="text" required/>
+
+      </br>
+      <label>Saison</label>
+      </br>
+      <input id="season" name="season" type="number" value="2025"/>
+        <span style="font-size: 12px; display: block;">
+          Une saison se déroule du 6 Aout de l'année en cours jusqu'au 5 Aout de l'année d'après.
+        </span>
+
+      </br>
+      <label>Année de naissance</label>
+      </br>
+      <input id="birth_year" name="birth_year" type="number" value="1991"/>
+
+      <hr>
+
+      <label>Colonnes Supplémentaires</label>
+      </br>
+      <input id="estimate" name="estimate" type="checkbox"/>
+      <span style="font-size: 12px;">Estimation - Prévision du temps que prendra le jeu, format hh:mm:ss</span>
+      </br>
+      <input id="played" name="played" type="checkbox"/>
+      <span style="font-size: 12px;">Temps passé - Temps passé sur le jeu, format hh:mm:ss</span>
+      </br>
+      <input id="delta" name="delta" type="checkbox"/>
+      <span style="font-size: 12px;">Différence - Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé (Ajouter cette colonne ajoutera aussi celles de l'estimation et du temps passé)</span>
+      </br>
+      <input id="rating" name="rating" type="checkbox"/>
+      <span style="font-size: 12px;">Note</span>
+      </br>
+      <input id="verdict" name="verdict" type="checkbox"/>
+      <span style="font-size: 12px;">Verdict - Si vous voulez séparer votre commentaire avant et après avoir fait le jeu</span>
+
+      </br></br></br>
+      <input type="submit" value="Rejoindre"/>
+      &nbsp&nbsp&nbsp<input type="button" value="Fermer" onclick="google.script.host.close()"/>
+    </form>
+  </body>
+</html>
