@@ -99,6 +99,7 @@ function get_finished_games_formula( _participant_sheet, _first_row, _nb_rows )
 */
 function finished_games_column( _home_sheet, _participant_sheet, _row )
 {
+  Logger.log( "Filling finished games column..." );
   // First we find where the table begins.
   const completion_header_row = get_header_row( _participant_sheet, "A:A", "Complétion" );
   // Then we determine how many rows there are in the participant table.
@@ -117,6 +118,7 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
 */
 function get_birth_year_and_season( _participant_sheet, _year_header_row, _nb_rows )
 {
+  Logger.log( "Retrieving birth year and season from participant sheet..." );
   // We increment _year_header_row to start at the first line under the header.
   var data = _participant_sheet.getRange( "B" + ( _year_header_row + 1 ) + ":B" ).getValues();
   
@@ -138,6 +140,7 @@ function get_birth_year_and_season( _participant_sheet, _year_header_row, _nb_ro
     }
   }
 
+  Logger.log( "Birth year: %d - Season: %d", birth_year, season );
   var years = {_birth_year: birth_year, _season: season};
   return years;
 }
@@ -147,6 +150,7 @@ function get_birth_year_and_season( _participant_sheet, _year_header_row, _nb_ro
 */
 function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_infos )
 {
+  Logger.log( "Filling games to finish column..." );
   // We have to determine the birth year of the participant and the season they're participating in.
   var years = get_birth_year_and_season( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
 
@@ -163,6 +167,7 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
 */
 function progression_bar_column( _home_sheet, _row )
 {
+  Logger.log( "Filling progression bar column..." );
   _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setValue( "=sparkline(B" + _row + ';{"charttype"\\"bar";"max"\\C' + _row + ';"min"\\0;"color1"\\"green"})' );
   _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setNumberFormat( "[h]:mm:ss" );
 }
@@ -172,10 +177,14 @@ function progression_bar_column( _home_sheet, _row )
 */
 function current_game_column( _home_sheet, _participant_sheet, _row, _sheet_infos )
 {
+  Logger.log( "Filling current game column..." );
   const participant_status_range = get_participant_status_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
   const participant_lookup_range = get_participant_game_lookup_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
   var range = _home_sheet.getRange( _row, HOME_CURRENT_GAME_COL );
-  range.setValue( '=if(countif(indirect("' + participant_status_range + '");"En cours")=0;"<Pas de jeu en cours>";vlookup("En cours";indirect("' + participant_lookup_range + '");3;false))' );
+  var formula = '=if(B' + _row + '=C' + _row + ';"🎉 Liste terminée! 🎉";';  // If the list is finished, display a special text.
+  formula += 'if(countif(indirect("' + participant_status_range + '");"En cours")=0;"<Pas de jeu en cours>";';   // Else, if no current game, display an other special text.
+  formula += 'vlookup("En cours";indirect("' + participant_lookup_range + '");3;false)))';                        // Otherwise display the game currently played.
+  range.setValue( formula );
 }
 
 /* **********************************************************
@@ -183,15 +192,19 @@ function current_game_column( _home_sheet, _participant_sheet, _row, _sheet_info
 */
 function gather_participants()
 {
+  Logger.log( "Refreshing all participants in home sheet list." );
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
 
   // Clearing old participants data from table first row to last row with data
   // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear( { contentsOnly: true, commentsOnly: true } );
+  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear();  // This doesn't clear comments for some reason.
+  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear( { commentsOnly: true} );   // This doesn't clear conditionnal formating when I use the corresponding option.
 
   var row = HOME_PARTICIPANTS_FIRST_ROW;
   var sheets = ss.getSheets();
+
+  Logger.log( "%d sheets found in the spreadsheet.", sheets.length );
 
   // For each existing sheet, we're gonna add a row in the table and gather their stats
   sheets.forEach( function(sheet)
@@ -201,6 +214,7 @@ function gather_participants()
       return;
     }
 
+    Logger.log( "Adding participant to the list: %s", sheet.getName() );
     // Putting the name and a link to the sheet in the cell
     const richText = SpreadsheetApp.newRichTextValue()
                      .setText( sheet.getName() )
@@ -215,6 +229,11 @@ function gather_participants()
     ++row;
   });
 
+  const nb_stats_rows = row - HOME_PARTICIPANTS_FIRST_ROW;
+  Logger.log( "%d participants added to the table.", nb_stats_rows );
+
   // Setting center alignment for all the range we just filled
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, row - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).setHorizontalAlignment( "center" );
+  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH ).setHorizontalAlignment( "center" );
+
+  set_participants_stats_rules( nb_stats_rows );
 }

@@ -48,6 +48,8 @@ function add_column( sheet, preceding_column, name )
 */
 function add_columns( sheet, params )
 {
+  Logger.log( "Adding columns..." );
+
   var column = MODEL_TABLE_VERSION_COL;
   var columns_added = 0;
 
@@ -58,6 +60,7 @@ function add_columns( sheet, params )
     var new_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat( "[h]:mm:ss" );
     ++columns_added;
+    Logger.log( "Added column: Estimation" );
   }
   if( params.played || params.delta )
   {
@@ -66,6 +69,7 @@ function add_columns( sheet, params )
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     ++columns_added;
+    Logger.log( "Added column: Temps Passé" );
   }
   if( params.delta )
   {
@@ -75,16 +79,19 @@ function add_columns( sheet, params )
     new_range.setNumberFormat("[h]:mm:ss");
     new_range.setValue( "=if(A" + MODEL_TABLE_FIRST_ROW + " = \"Terminé\";if(isblank(H" + MODEL_TABLE_FIRST_ROW + ");;H" + MODEL_TABLE_FIRST_ROW + "-G" + MODEL_TABLE_FIRST_ROW + ");)" );
     ++columns_added;
+    Logger.log( "Added column: Différence" );
   }
   if( params.rating )
   {
     column = add_column( sheet, column, "Note" );
     ++columns_added;
+    Logger.log( "Added column: Note" );
   }
   if( params.verdict )
   {
     column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, "Verdict" );
     ++columns_added;
+    Logger.log( "Added column: Verdict" );
   }
 
   return columns_added;
@@ -95,6 +102,7 @@ function add_columns( sheet, params )
 */
 function add_rows( sheet, params, columns_added )
 {
+  Logger.log( "Adding rows..." );
   sheet.getRange(MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL).setValue( params.birth_year );
   const model_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, MODEL_TABLE_WIDTH + columns_added );
 
@@ -108,6 +116,7 @@ function add_rows( sheet, params, columns_added )
   }
 
   sheet.setRowHeightsForced( MODEL_TABLE_FIRST_ROW, row - MODEL_TABLE_FIRST_ROW, DEFAULT_ROW_HEIGHT );
+  Logger.log( "Added %d rows.", row - MODEL_TABLE_FIRST_ROW );
 }
 
 /* **********************************************************
@@ -115,9 +124,10 @@ function add_rows( sheet, params, columns_added )
 */
 function create_new_page( params )
 {
- /* const params = {
+  /*const params = {
+    pseudo: "Bobby",
     season: 2025,
-    birth_year: 1991,
+    birth_year: 2003,
     estimate: false,
     played: false,
     delta: true,
@@ -125,8 +135,27 @@ function create_new_page( params )
     verdict: true
   }*/
 
+SpreadsheetApp.flush();
+     var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(5000); 
+     } catch (e) {
+        Logger.log('Could not obtain lock after 5seconds.');
+        //return HtmlService.createHtmlOutput("<b> Server Busy please try after some time <p>")
+        // In case this a server side code called asynchronously you return a error code and display the appropriate message on the client side
+        return "Error: Server busy try again later... Sorry :("
+     }
+
+  Logger.log( 'Received informations from html popup. User "%s" wants to create a list going from %d to %d.', params.pseudo, params.birth_year, params.season );
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const model_sheet = ss.getSheetByName( MODEL_SHEET_NAME );
+
+  if( ss.getSheetByName( params.pseudo ) != null )
+  {
+    Logger.log( "Une feuille avec ce nom existe déjà!" );
+    return;
+  }
+
   var new_sheet = model_sheet.copyTo(ss);
   ss.setActiveSheet(new_sheet);
 
@@ -134,6 +163,8 @@ function create_new_page( params )
   {
     new_sheet.setName( params.pseudo );
   }
+
+  Logger.log( "New sheet created." );
 
   const columns_added = add_columns( new_sheet, params );
   add_rows( new_sheet, params, columns_added );
