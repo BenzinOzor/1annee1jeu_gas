@@ -1,11 +1,3 @@
-const completion = [
-  "Pas commencé",
-  "En cours",
-  "Terminé",
-  "Abandonné",
-  "Remplacé"
-];
-
 const MODEL_SHEET_NAME = "⚙️ Modèle";
 
 const MODEL_TABLE_HEADER_ROW = 6;
