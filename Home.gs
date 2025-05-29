@@ -3,20 +3,21 @@ const HOME_PARTICIPANTS_FIRST_ROW = 9;
 const HOME_PARTICIPANTS_TABLE_WIDTH = 5;
 const HOME_PARTICIPANTS_COL = 1;
 const HOME_FINISHED_GAMES_COL = 2;
+const HOME_GAMES_TO_FINISH_COL = 3;
 
 
 /* **********************************************************
 *  Find where the completion column starts, in case the user moved their table vertically.
 */
-function get_completion_header_row( _participant_sheet )
+function get_header_row( _participant_sheet, _range, _title )
 {
-  var data = _participant_sheet.getRange( "A:A" ).getValues();
+  var data = _participant_sheet.getRange( _range ).getValues();
 
   completion_header_row = 0;
 
   for( ; completion_header_row < data.length; ++completion_header_row )
   {
-    if( data[ completion_header_row ][ 0 ] == "Complétion" )
+    if( data[ completion_header_row ][ 0 ] == _title )
     {
       return completion_header_row;
     }
@@ -43,17 +44,12 @@ function is_completion_status( _string )
 */
 function get_number_of_rows( _participant_sheet, _completion_header_row )
 {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
-
   // We increment _completion_header_row to start at the first line under the header.
   var data = _participant_sheet.getRange( "A" + ( _completion_header_row + 1 ) + ":A" ).getValues();
-  home_sheet.getRange( 1, 6 ).setValue( data.length );
-  nb_rows = 0;
+  var nb_rows = 0;
 
   for( ; nb_rows < data.length; ++nb_rows )
   {
-    home_sheet.getRange( 1, 7 ).setValue( data[ nb_rows ][ 0 ] );
     // We check if there is a status text in the cell. We can't just check if the cell is empty in case the user customised something under their table.
     if( is_completion_status( data[ nb_rows ][ 0 ] ) == false )
     {
@@ -70,7 +66,7 @@ function get_number_of_rows( _participant_sheet, _completion_header_row )
 */
 function get_participant_status_range( _participant_sheet, _first_row, _nb_rows )
 {
-  participant_name = _participant_sheet.getName();
+  const participant_name = _participant_sheet.getName();
 
   return participant_name + "!A" + _first_row + ":A" + (_first_row + _nb_rows);
 }
@@ -80,7 +76,7 @@ function get_participant_status_range( _participant_sheet, _first_row, _nb_rows 
 */
 function get_finished_games_formula( _participant_sheet, _first_row, _nb_rows )
 {
-  participant_range = get_participant_status_range( _participant_sheet, _first_row, _nb_rows );
+  const participant_range = get_participant_status_range( _participant_sheet, _first_row, _nb_rows );
 
   return "=countif(indirect(\"" + participant_range + "\");\"Terminé\") + countif(indirect(\"" + participant_range + "\");\"Abandonné\")";
 }
@@ -91,13 +87,61 @@ function get_finished_games_formula( _participant_sheet, _first_row, _nb_rows )
 function finished_games_column( _home_sheet, _participant_sheet, _row )
 {
   // First we find where the table begins.
-  completion_header_row = get_completion_header_row( _participant_sheet );
+  const completion_header_row = get_header_row( _participant_sheet, "A:A", "Complétion" );
   // Then we determine how many rows there are in the participant table.
   // We send completion_header_row + 1 because the index we got starts at 0 and we will use it in a get range, that starts at 1.
-  nb_rows = get_number_of_rows( _participant_sheet, completion_header_row + 1 );
+  const nb_rows = get_number_of_rows( _participant_sheet, completion_header_row + 1 );
 
   // Now that we gathered all the informations we need, we can begin to fill the cell with the formula.
   _home_sheet.getRange( _row, HOME_FINISHED_GAMES_COL ).setValue( get_finished_games_formula( _participant_sheet, completion_header_row + 1, nb_rows ) );
+
+  return nb_rows;
+}
+
+/* **********************************************************
+*  Count the number of rows in the user table. It can vary from the strict season - birth year if some lines have been added in case of game replacement for example.
+*/
+function get_birth_year_and_season( _participant_sheet, _year_header_row, _nb_rows )
+{
+  // We increment _year_header_row to start at the first line under the header.
+  var data = _participant_sheet.getRange( "B" + ( _year_header_row + 1 ) + ":B" ).getValues();
+  
+  // To find the birth year and the season, we'll look for the smallest and highest numbers in the year column.
+  // Looking at the first and last might not suffise as the participant may have changed the order by sorting their table with an other parameter than the year.
+  var birth_year = 9999;
+  var season = 1;
+
+  for( var row = 0; row < _nb_rows; ++row )
+  {
+   if( data[ row ][ 0 ] < birth_year )
+    {
+      birth_year = data[ row ][ 0 ];
+    }
+
+    if( data[ row ][ 0 ] > season )
+    {
+      season = data[ row ][ 0 ];
+    }
+  }
+
+  var years = {_birth_year: birth_year, _season: season};
+  return years;
+}
+
+/* **********************************************************
+*  Fill the games to finish column. We have to be careful to check that we might have more rows to count than the age of the user.
+*/
+function games_to_finish_column( _home_sheet, _participant_sheet, _row, _nb_rows )
+{
+  // First we find where the table begins.
+  year_header_row = get_header_row( _participant_sheet, "B:B", "Année" );
+  // From there, we can determine the birth year of the participant and the season they're participating in.
+  var years = get_birth_year_and_season( _participant_sheet, year_header_row + 1, _nb_rows );
+
+  // We can't put a dynamic formula here, because the first year readable in the participant table can change if they reorder it.
+  // Birth year could be the first row, it could be the 15th
+  // So we're just gonna put the result of our calculation in the cell. It's pretty constant anyway as it should only change for a new season, at which point we'd do a new scan and replace the values.
+  _home_sheet.getRange( _row, HOME_GAMES_TO_FINISH_COL ).setValue( years._season - years._birth_year + 1 );
 }
 
 /* **********************************************************
@@ -106,14 +150,14 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
 function gather_participants()
 {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+  var home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
 
   // Clearing old participants data from table first row to last row with data
   // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
   home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear( { contentsOnly: true, commentsOnly: true } );
 
-  row = HOME_PARTICIPANTS_FIRST_ROW;
-  sheets = ss.getSheets();
+  var row = HOME_PARTICIPANTS_FIRST_ROW;
+  var sheets = ss.getSheets();
 
   // For each existing sheet, we're gonna add a row in the table and gather their stats
   sheets.forEach( function(sheet)
@@ -130,10 +174,8 @@ function gather_participants()
                      .build();
     home_sheet.getRange( row, HOME_PARTICIPANTS_COL ).setRichTextValue(richText);
 
-    finished_games_column( home_sheet, sheet, row );
-    /*
-    //=countif(INDIRECT(CONCATENATE(A{20};"!A{7}:A";{7}+C{20}));"Terminé") + countif(INDIRECT(CONCATENATE(A20;"!A7:A";6+C20));"Abandonné")
-    */
+    const nb_rows = finished_games_column( home_sheet, sheet, row );
+    games_to_finish_column( home_sheet, sheet, row, nb_rows );
     ++row;
   });
 
