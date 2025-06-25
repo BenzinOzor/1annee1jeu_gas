@@ -1,13 +1,30 @@
 const HOME_SHEET_NAME = "🏠Accueil";
 
-const HOME_PARTICIPANTS_FIRST_ROW = 9;
+const HOME_PARTICIPANTS_FIRST_ROW = 22;
 const HOME_PARTICIPANTS_TABLE_WIDTH = 5;
-const HOME_PARTICIPANTS_COL = 1;
-const HOME_FINISHED_GAMES_COL = 2;
-const HOME_GAMES_TO_FINISH_COL = 3;
-const HOME_PROGRESSION_BAR_COL = 4;
-const HOME_CURRENT_GAME_COL = 5;
+const HOME_PARTICIPANTS_COL = 2;    // B
+const HOME_FINISHED_GAMES_COL = 3;  // C
+const HOME_GAMES_TO_FINISH_COL = 4; // D
+const HOME_PROGRESSION_BAR_COL = 5; // E
+const HOME_CURRENT_GAME_COL = 6;    // F
 
+
+function get_column_letter( _column_number )
+{
+  switch( _column_number )
+  {
+    case 2:
+      return "B";
+    case 3:
+      return "C";
+    case 4:
+      return "D";
+    case 5:
+      return "E";
+    case 6:
+      return "F";
+  }
+}
 
 /* **********************************************************
 *  Find where the completion column starts, in case the user moved their table vertically.
@@ -16,7 +33,7 @@ function get_header_row( _participant_sheet, _range, _title )
 {
   var data = _participant_sheet.getRange( _range ).getValues();
 
-  completion_header_row = 0;
+  var completion_header_row = 0;
 
   for( ; completion_header_row < data.length; ++completion_header_row )
   {
@@ -27,6 +44,45 @@ function get_header_row( _participant_sheet, _range, _title )
   }
 
   return 0;
+}
+
+function is_name_already_in_table( _home_sheet, _name )
+{
+  if( _name.length == 0 )
+  {
+    return false;
+  }
+  
+  var data = _home_sheet.getRange( get_column_letter( HOME_PARTICIPANTS_COL ) + ':' + get_column_letter( HOME_PARTICIPANTS_COL ) ).getValues();
+
+  var data_row = 0;
+
+  for( ; data_row < data.length; ++data_row )
+  {
+    if( data[ data_row ][ 0 ] == _name )
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function get_first_empty_row( _home_sheet, _column, _first_row )
+{
+  var data = _home_sheet.getRange( get_column_letter( HOME_PARTICIPANTS_COL ) + _first_row + ':' + get_column_letter( HOME_PARTICIPANTS_COL ) ).getValues();
+
+  var data_row = 0;
+
+  for( ; data_row < data.length; ++data_row )
+  {
+    if( data[ data_row ][ 0 ] == "" )
+    {
+      return _first_row + data_row;
+    }
+  }
+
+  return _first_row;
 }
 
 /* **********************************************************
@@ -168,7 +224,7 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
 function progression_bar_column( _home_sheet, _row )
 {
   Logger.log( "Filling progression bar column..." );
-  _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setValue( "=sparkline(B" + _row + ';{"charttype"\\"bar";"max"\\C' + _row + ';"min"\\0;"color1"\\"green"})' );
+  _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setValue( "=sparkline(" + get_column_letter(HOME_FINISHED_GAMES_COL) + _row + ';{"charttype"\\"bar";"max"\\' + get_column_letter(HOME_GAMES_TO_FINISH_COL) + _row + ';"min"\\0;"color1"\\"green"})' );
   _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setNumberFormat( "[h]:mm:ss" );
 }
 
@@ -181,10 +237,33 @@ function current_game_column( _home_sheet, _participant_sheet, _row, _sheet_info
   const participant_status_range = get_participant_status_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
   const participant_lookup_range = get_participant_game_lookup_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
   var range = _home_sheet.getRange( _row, HOME_CURRENT_GAME_COL );
-  var formula = '=if(B' + _row + '=C' + _row + ';"🎉 Liste terminée! 🎉";';  // If the list is finished, display a special text.
+  var formula = '=if(' + get_column_letter(HOME_FINISHED_GAMES_COL) + _row + '=' + get_column_letter(HOME_GAMES_TO_FINISH_COL) + _row + ';"🎉 Liste terminée! 🎉";';  // If the list is finished, display a special text.
   formula += 'if(countif(indirect("' + participant_status_range + '");"En cours")=0;"<Pas de jeu en cours>";';   // Else, if no current game, display an other special text.
   formula += 'vlookup("En cours";indirect("' + participant_lookup_range + '");3;false)))';                        // Otherwise display the game currently played.
   range.setValue( formula );
+}
+
+function add_participant_info_to_table( _home_sheet, _participant_sheet, _row )
+{
+  if( (_participant_sheet.getName() == HOME_SHEET_NAME) || (_participant_sheet.getName().indexOf( "Modèle" ) > 0) )
+    {
+      return false;
+    }
+
+    Logger.log( "Adding participant to the list: %s", _participant_sheet.getName() );
+    // Putting the name and a link to the sheet in the cell
+    const richText = SpreadsheetApp.newRichTextValue()
+                     .setText( _participant_sheet.getName() )
+                     .setLinkUrl( "#gid=" + _participant_sheet.getSheetId() )
+                     .build();
+    _home_sheet.getRange( _row, HOME_PARTICIPANTS_COL ).setRichTextValue(richText);
+
+    const sheet_infos = finished_games_column( _home_sheet, _participant_sheet, _row );
+    games_to_finish_column( _home_sheet, _participant_sheet, _row, sheet_infos );
+    progression_bar_column( _home_sheet, _row );
+    current_game_column( _home_sheet, _participant_sheet, _row, sheet_infos );
+
+    return true;
 }
 
 /* **********************************************************
@@ -209,31 +288,64 @@ function gather_participants()
   // For each existing sheet, we're gonna add a row in the table and gather their stats
   sheets.forEach( function(sheet)
   {
-    if( (sheet.getName() == HOME_SHEET_NAME) || (sheet.getName() == MODEL_SHEET_NAME) )
+    if( add_participant_info_to_table( home_sheet, sheet, row ) )
     {
-      return;
+      ++row;
     }
-
-    Logger.log( "Adding participant to the list: %s", sheet.getName() );
-    // Putting the name and a link to the sheet in the cell
-    const richText = SpreadsheetApp.newRichTextValue()
-                     .setText( sheet.getName() )
-                     .setLinkUrl( "#gid=" + sheet.getSheetId() )
-                     .build();
-    home_sheet.getRange( row, HOME_PARTICIPANTS_COL ).setRichTextValue(richText);
-
-    const sheet_infos = finished_games_column( home_sheet, sheet, row );
-    games_to_finish_column( home_sheet, sheet, row, sheet_infos );
-    progression_bar_column( home_sheet, row );
-    current_game_column( home_sheet, sheet, row, sheet_infos );
-    ++row;
   });
 
   const nb_stats_rows = row - HOME_PARTICIPANTS_FIRST_ROW;
   Logger.log( "%d participants added to the table.", nb_stats_rows );
 
   // Setting center alignment for all the range we just filled
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH ).setHorizontalAlignment( "center" );
+  //home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH ).setHorizontalAlignment( "center" );
 
-  set_participants_stats_rules( nb_stats_rows );
+  var participants_range = home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH );
+  participants_range.setHorizontalAlignment( "center" );
+
+  set_participants_stats_rules( participants_range );
+}
+
+function add_missing_participants_to_table()
+{
+  Logger.log( "Adding missing participants to home sheet list." );
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+  var home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+  var nb_added_participants = 0;
+  var first_free_row = 0;
+
+  sheets.forEach( function(sheet)
+  {
+    if( is_name_already_in_table( home_sheet, sheet.getName() ) )
+    {
+      return;
+    }
+
+    first_free_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
+
+    if( add_participant_info_to_table( home_sheet, sheet, first_free_row ) )
+    {
+      ++nb_added_participants;
+    }
+  });
+
+  // Retrieving last cell with text. Can't use GetLastRow because other things on the side of the participants list might be lower and we don't want to go too low.
+  first_free_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW ) - 1;
+
+  Logger.log( "%d participants added to the table.", nb_added_participants );
+
+  var participants_range = home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, first_free_row - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH );
+
+  // Clearing old participants data from table first row to last row with data
+  // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
+  // Recreating all the rules at the end will make just one big block of rules, easier to deal with, rather than multiple blocks for each added user.
+  participants_range.clear( { formatOnly: true});  // This doesn't clear comments for some reason.
+  participants_range.clear( { commentsOnly: true} );   // This doesn't clear conditionnal formating when I use the corresponding option.
+
+  participants_range.setHorizontalAlignment( "center" );
+
+  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, first_free_row - HOME_PARTICIPANTS_FIRST_ROW + 1).setFontColor( '#1155cc' ); //#1155cc
+
+  set_participants_stats_rules( participants_range );
 }

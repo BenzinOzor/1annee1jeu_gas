@@ -14,6 +14,7 @@ function onOpen() {
   ui.createMenu('Custom Menu')
       .addItem('popup', 'creation_popup')
       .addItem('refresh participants', 'gather_participants')
+      .addItem( 'add missing participants', 'add_missing_participants_to_table' )
       .addSeparator()
       .addSubMenu(ui.createMenu('Sub-menu')
           .addItem('Second item', 'menuItem2'))
