@@ -215,7 +215,6 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
   // So we're just gonna put the result of our calculation in the cell. It's pretty constant anyway as it should only change for a new season, at which point we'd do a new scan and replace the values.
   var range = _home_sheet.getRange( _row, HOME_GAMES_TO_FINISH_COL );
   range.setValue( years._season - years._birth_year + 1 );
-  range.setNote( "Saison " + years._season );
 }
 
 /* **********************************************************
@@ -278,7 +277,6 @@ function gather_participants()
   // Clearing old participants data from table first row to last row with data
   // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
   home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear();  // This doesn't clear comments for some reason.
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear( { commentsOnly: true} );   // This doesn't clear conditionnal formating when I use the corresponding option.
 
   var row = HOME_PARTICIPANTS_FIRST_ROW;
   var sheets = ss.getSheets();
@@ -298,14 +296,12 @@ function gather_participants()
   Logger.log( "%d participants added to the table.", nb_stats_rows );
 
   // Setting center alignment for all the range we just filled
-  //home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH ).setHorizontalAlignment( "center" );
-
-  var participants_range = home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH );
-  participants_range.setHorizontalAlignment( "center" );
-
-  set_participants_stats_rules( participants_range );
+  set_participants_stats_rules( home_sheet, home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_stats_rows, HOME_PARTICIPANTS_TABLE_WIDTH ) );
 }
 
+/* **********************************************************
+*  Add the participants that weren't already in the list to the home page
+*/
 function add_missing_participants_to_table()
 {
   Logger.log( "Adding missing participants to home sheet list." );
@@ -330,22 +326,22 @@ function add_missing_participants_to_table()
     }
   });
 
-  // Retrieving last cell with text. Can't use GetLastRow because other things on the side of the participants list might be lower and we don't want to go too low.
-  first_free_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW ) - 1;
-
   Logger.log( "%d participants added to the table.", nb_added_participants );
 
-  var participants_range = home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, first_free_row - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH );
+  reset_participants_stats_rules( home_sheet );
+}
 
-  // Clearing old participants data from table first row to last row with data
-  // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
-  // Recreating all the rules at the end will make just one big block of rules, easier to deal with, rather than multiple blocks for each added user.
-  participants_range.clear( { formatOnly: true});  // This doesn't clear comments for some reason.
-  participants_range.clear( { commentsOnly: true} );   // This doesn't clear conditionnal formating when I use the corresponding option.
+function add_participant_to_table_from_sheet( _participant_sheet )
+{
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+  let first_free_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
+  
+  Logger.log( "Adding '%s' to home participants list...", _participant_sheet.getName() );
 
-  participants_range.setHorizontalAlignment( "center" );
-
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, first_free_row - HOME_PARTICIPANTS_FIRST_ROW + 1).setFontColor( '#1155cc' ); //#1155cc
-
-  set_participants_stats_rules( participants_range );
+  if( add_participant_info_to_table( home_sheet, _participant_sheet, first_free_row ) )
+  {
+    Logger.log( "'%s' added!", _participant_sheet.getName() );
+    set_participants_stats_rules( home_sheet, home_sheet.getRange( first_free_row, HOME_PARTICIPANTS_COL, 1, HOME_PARTICIPANTS_TABLE_WIDTH ) );
+  }
 }

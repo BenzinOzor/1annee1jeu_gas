@@ -1,5 +1,11 @@
 const MODEL_SHEET_NAME = "⚙️ Modèle";
 
+const MODEL_ESTIMATE_COL_NAME = "Estimation";
+const MODEL_PLAYED_COL_NAME = "Temps Passé";
+const MODEL_DELTA_COL_NAME = "Différence";
+const MODEL_RATING_COL_NAME = "Note";
+const MODEL_VERDICT_COL_NAME = "Commentaire Pendant / Post Jeu";
+
 const MODEL_TABLE_HEADER_ROW = 6;
 const MODEL_TABLE_FIRST_ROW = 7;
 const MODEL_TABLE_YEAR_COL = 2;
@@ -8,18 +14,6 @@ const MODEL_TABLE_COM_COL = 7;
 const MODEL_TABLE_WIDTH = 7;
 const DEFAULT_ROW_HEIGHT = 21;
 
-function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  // Or DocumentApp, SlidesApp or FormApp.
-  ui.createMenu('Custom Menu')
-      .addItem('popup', 'creation_popup')
-      .addItem('refresh participants', 'gather_participants')
-      .addItem( 'add missing participants', 'add_missing_participants_to_table' )
-      .addSeparator()
-      .addSubMenu(ui.createMenu('Sub-menu')
-          .addItem('Second item', 'menuItem2'))
-      .addToUi();
-}
 
 /* **********************************************************
 *  Opens the page creation popup when someone wants to join
@@ -44,6 +38,31 @@ function add_column( sheet, preceding_column, name )
 }
 
 /* **********************************************************
+*  Helper function that indicates whether a given calumn already exist in the sheet or not.
+*/
+function does_column_exist( _sheet, _name )
+{
+  if( _name.length == 0 )
+  {
+    return false;
+  }
+  
+  let data = _sheet.getRange( MODEL_TABLE_HEADER_ROW + ':' + MODEL_TABLE_HEADER_ROW ).getValues();
+  let data_col = 0;
+
+  // We don't want to check endlessly, if the name wasn't in the first 20 columns, we consider it never will.
+  for( ; data_col < 20; ++data_col )
+  {
+    if( data[ 0 ][ data_col ] == _name )
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* **********************************************************
 *  Add all the columns selected by the user in the new table
 *  Returns the number of added columns
 */
@@ -54,45 +73,45 @@ function add_columns( sheet, params )
   var column = MODEL_TABLE_VERSION_COL;
   var columns_added = 0;
 
-  if( params.estimate || params.delta )
+  if( ( params.estimate || params.delta ) && does_column_exist( sheet, MODEL_ESTIMATE_COL_NAME ) == false )
   {
-    column = add_column( sheet, column, "Estimation" );
+    column = add_column( sheet, column, MODEL_ESTIMATE_COL_NAME );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Estimation du temps que prendra le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat( "[h]:mm:ss" );
     ++columns_added;
-    Logger.log( "Added column: Estimation" );
+    Logger.log( "Added column: " + MODEL_ESTIMATE_COL_NAME );
   }
-  if( params.played || params.delta )
+  if( ( params.played || params.delta ) && does_column_exist( sheet, MODEL_PLAYED_COL_NAME ) == false )
   {
-    column = add_column( sheet, column, "Temps Passé" );
+    column = add_column( sheet, column, MODEL_PLAYED_COL_NAME );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Temps passé sur le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     ++columns_added;
-    Logger.log( "Added column: Temps Passé" );
+    Logger.log( "Added column: " + MODEL_PLAYED_COL_NAME );
   }
-  if( params.delta )
+  if( params.delta && does_column_exist( sheet, MODEL_DELTA_COL_NAME ) == false )
   {
-    column = add_column( sheet, column, "Différence");
+    column = add_column( sheet, column, MODEL_DELTA_COL_NAME );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     new_range.setValue( "=if(A" + MODEL_TABLE_FIRST_ROW + " = \"Terminé\";if(isblank(H" + MODEL_TABLE_FIRST_ROW + ");;H" + MODEL_TABLE_FIRST_ROW + "-G" + MODEL_TABLE_FIRST_ROW + ");)" );
     ++columns_added;
-    Logger.log( "Added column: Différence" );
+    Logger.log( "Added column: " + MODEL_DELTA_COL_NAME );
   }
-  if( params.rating )
+  if( params.rating && does_column_exist( sheet, MODEL_RATING_COL_NAME ) == false )
   {
-    column = add_column( sheet, column, "Note" );
+    column = add_column( sheet, column, MODEL_RATING_COL_NAME );
     ++columns_added;
-    Logger.log( "Added column: Note" );
+    Logger.log( "Added column: " + MODEL_RATING_COL_NAME );
   }
-  if( params.verdict )
+  if( params.verdict && does_column_exist( sheet, MODEL_VERDICT_COL_NAME ) == false )
   {
-    column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, "Verdict" );
+    column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, MODEL_VERDICT_COL_NAME );
     ++columns_added;
-    Logger.log( "Added column: Verdict" );
+    Logger.log( "Added column: " + MODEL_VERDICT_COL_NAME );
   }
 
   return columns_added;
@@ -170,5 +189,5 @@ SpreadsheetApp.flush();
   const columns_added = add_columns( new_sheet, params );
   add_rows( new_sheet, params, columns_added );
 
-  gather_participants();
+  add_participant_to_table_from_sheet( new_sheet );
 }
