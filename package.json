@@ -1,0 +1,22 @@
+{
+  "name": "1annee1jeu_gas",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BenzinOzor/1annee1jeu_gas.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BenzinOzor/1annee1jeu_gas/issues"
+  },
+  "homepage": "https://github.com/BenzinOzor/1annee1jeu_gas#readme",
+  "description": "",
+  "dependencies": {
+    "@types/google-apps-script": "^1.0.99"
+  }
+}
