@@ -1,14 +1,3 @@
-const HOME_SHEET_NAME = "🏠Accueil";
-
-const HOME_PARTICIPANTS_FIRST_ROW = 22;
-const HOME_PARTICIPANTS_TABLE_WIDTH = 5;
-const HOME_PARTICIPANTS_COL = 2;    // B
-const HOME_FINISHED_GAMES_COL = 3;  // C
-const HOME_GAMES_TO_FINISH_COL = 4; // D
-const HOME_PROGRESSION_BAR_COL = 5; // E
-const HOME_CURRENT_GAME_COL = 6;    // F
-
-
 function get_column_letter( _column_number )
 {
   switch( _column_number )
@@ -90,12 +79,20 @@ function get_first_empty_row( _home_sheet, _column, _first_row )
 */
 function is_completion_status( _string )
 {
-  if( _string == "Pas commencé" || _string == "En cours" || _string == "Terminé" || _string == "Abandonné" || _string == "Remplacé" )
+  switch( _string )
   {
-    return true;
+    case GAME_STATE_NOT_STARTED:
+    case GAME_STATE_PLAYING:
+    case GAME_STATE_DONE:
+    case GAME_STATE_ABANDONED:
+    case GAME_STATE_REMPLACED:
+    case GAME_STATE_IGNORED:
+    {
+      return true;
+    }
+    default:
+      return false;
   }
-
-  return false;
 }
 
 /* **********************************************************
@@ -143,11 +140,16 @@ function get_participant_game_lookup_range( _participant_sheet, _first_row, _nb_
 /* **********************************************************
 *  Helper function providing the formula that counts a given status text.
 */
+function get_status_count_formula( _range, _status )
+{
+  return 'countif(indirect("' + _range + '");"' + _status + '")';
+}
+
 function get_finished_games_formula( _participant_sheet, _first_row, _nb_rows )
 {
   const participant_range = get_participant_status_range( _participant_sheet, _first_row, _nb_rows );
 
-  return "=countif(indirect(\"" + participant_range + "\");\"Terminé\") + countif(indirect(\"" + participant_range + "\");\"Abandonné\")";
+  return "=" + get_status_count_formula( participant_range, GAME_STATE_DONE ) + " + " + get_status_count_formula( participant_range, GAME_STATE_ABANDONED );
 }
 
 /* **********************************************************
@@ -214,7 +216,10 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
   // Birth year could be the first row, it could be the 15th
   // So we're just gonna put the result of our calculation in the cell. It's pretty constant anyway as it should only change for a new season, at which point we'd do a new scan and replace the values.
   var range = _home_sheet.getRange( _row, HOME_GAMES_TO_FINISH_COL );
-  range.setValue( years._season - years._birth_year + 1 );
+
+  const participant_range = get_participant_status_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
+
+  range.setValue( "=" + (years._season - years._birth_year + 1) + " - " + get_status_count_formula( participant_range, GAME_STATE_IGNORED ) );
 }
 
 /* **********************************************************
@@ -223,7 +228,14 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
 function progression_bar_column( _home_sheet, _row )
 {
   Logger.log( "Filling progression bar column..." );
-  _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setValue( "=sparkline(" + get_column_letter(HOME_FINISHED_GAMES_COL) + _row + ';{"charttype"\\"bar";"max"\\' + get_column_letter(HOME_GAMES_TO_FINISH_COL) + _row + ';"min"\\0;"color1"\\"green"})' );
+  const finished_games_string = get_column_letter(HOME_FINISHED_GAMES_COL) + _row;
+  const games_to_finish_string = get_column_letter(HOME_GAMES_TO_FINISH_COL) + _row;
+  
+  var sparkline = '=sparkline({' + finished_games_string + ';' + games_to_finish_string + '};';
+  sparkline += '{"charttype"\\"bar";"max"\\' + games_to_finish_string + ';"min"\\0;"color1"\\"green";';
+  sparkline += '"color2"\\if(' + finished_games_string + '=0;"efefef";"dddddd")})';
+
+  _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setValue( sparkline );
   _home_sheet.getRange( _row, HOME_PROGRESSION_BAR_COL ).setNumberFormat( "[h]:mm:ss" );
 }
 

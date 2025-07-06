@@ -1,20 +1,3 @@
-const MODEL_SHEET_NAME = "⚙️ Modèle";
-
-const MODEL_ESTIMATE_COL_NAME = "Estimation";
-const MODEL_PLAYED_COL_NAME = "Temps Passé";
-const MODEL_DELTA_COL_NAME = "Différence";
-const MODEL_RATING_COL_NAME = "Note";
-const MODEL_VERDICT_COL_NAME = "Commentaire Pendant / Post Jeu";
-
-const MODEL_TABLE_HEADER_ROW = 6;
-const MODEL_TABLE_FIRST_ROW = 7;
-const MODEL_TABLE_YEAR_COL = 2;
-const MODEL_TABLE_VERSION_COL = 6;
-const MODEL_TABLE_COM_COL = 7;
-const MODEL_TABLE_WIDTH = 7;
-const DEFAULT_ROW_HEIGHT = 21;
-
-
 /* **********************************************************
 *  Opens the page creation popup when someone wants to join
 */
@@ -97,7 +80,7 @@ function add_columns( sheet, params )
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
-    new_range.setValue( "=if(A" + MODEL_TABLE_FIRST_ROW + " = \"Terminé\";if(isblank(H" + MODEL_TABLE_FIRST_ROW + ");;H" + MODEL_TABLE_FIRST_ROW + "-G" + MODEL_TABLE_FIRST_ROW + ");)" );
+    new_range.setValue( '=if(A' + MODEL_TABLE_FIRST_ROW + ' = "Terminé";if(isblank(H' + MODEL_TABLE_FIRST_ROW + ');;H' + MODEL_TABLE_FIRST_ROW + ' - G' + MODEL_TABLE_FIRST_ROW + ');)' );
     ++columns_added;
     Logger.log( "Added column: " + MODEL_DELTA_COL_NAME );
   }

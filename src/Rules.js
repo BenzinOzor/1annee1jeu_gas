@@ -32,7 +32,14 @@ function set_participants_stats_rules( _sheet, _range )
     .build();
 
   const no_current_game_rule = SpreadsheetApp.newConditionalFormatRule()
-    .whenTextContains( "<Pas de jeu en cours>" )
+    .whenTextEqualTo( "<Pas de jeu en cours>" )
+    .setFontColor( "#b7b7b7" )
+    .setItalic( true )
+    .setRanges( [_range] )
+    .build();
+
+  const no_game_started_rule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextEqualTo( "0" )
     .setFontColor( "#b7b7b7" )
     .setItalic( true )
     .setRanges( [_range] )
@@ -40,6 +47,7 @@ function set_participants_stats_rules( _sheet, _range )
 
   rules.push( finished_list_rule );
   rules.push( no_current_game_rule );
+  rules.push( no_game_started_rule );
   _sheet.setConditionalFormatRules( rules );
   _range.setHorizontalAlignment( "center" );
 

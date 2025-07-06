@@ -1,0 +1,32 @@
+const MODEL_SHEET_NAME = "⚙️ Modèle";
+const HOME_SHEET_NAME = "🏠 Accueil";
+
+const DEFAULT_ROW_HEIGHT = 21;
+
+const GAME_STATE_NOT_STARTED = "Pas commencé";
+const GAME_STATE_PLAYING = "En cours";
+const GAME_STATE_DONE = "Terminé";
+const GAME_STATE_ABANDONED = "Abandonné";
+const GAME_STATE_REMPLACED = "Remplacé";
+const GAME_STATE_IGNORED = "Ignoré";
+
+const MODEL_ESTIMATE_COL_NAME = "Estimation";
+const MODEL_PLAYED_COL_NAME = "Temps Passé";
+const MODEL_DELTA_COL_NAME = "Différence";
+const MODEL_RATING_COL_NAME = "Note";
+const MODEL_VERDICT_COL_NAME = "Commentaire Pendant / Post Jeu";
+
+const MODEL_TABLE_HEADER_ROW = 6;
+const MODEL_TABLE_FIRST_ROW = 7;
+const MODEL_TABLE_YEAR_COL = 2;
+const MODEL_TABLE_VERSION_COL = 6;
+const MODEL_TABLE_COM_COL = 7;
+const MODEL_TABLE_WIDTH = 12;
+
+const HOME_PARTICIPANTS_FIRST_ROW = 22;
+const HOME_PARTICIPANTS_TABLE_WIDTH = 5;
+const HOME_PARTICIPANTS_COL = 2;    // B
+const HOME_FINISHED_GAMES_COL = 3;  // C
+const HOME_GAMES_TO_FINISH_COL = 4; // D
+const HOME_PROGRESSION_BAR_COL = 5; // E
+const HOME_CURRENT_GAME_COL = 6;    // F
