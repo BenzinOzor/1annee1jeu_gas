@@ -159,7 +159,7 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
 {
   Logger.log( "Filling finished games column..." );
   // First we find where the table begins.
-  const completion_header_row = get_header_row( _participant_sheet, "A:A", "Complétion" );
+  const completion_header_row = get_header_row( _participant_sheet, "A:A", MODEL_STATE_COL_NAME );
   // Then we determine how many rows there are in the participant table.
   // We send completion_header_row + 1 because the index we got starts at 0 and we will use it in a get range, that starts at 1.
   const nb_rows = get_number_of_rows( _participant_sheet, completion_header_row + 1 );

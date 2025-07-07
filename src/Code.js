@@ -20,6 +20,22 @@ function add_column( sheet, preceding_column, name )
   return new_column;
 }
 
+function get_number_of_columns( _participant_sheet )
+{
+  let data = _participant_sheet.getRange( MODEL_TABLE_HEADER_ROW + ':' + MODEL_TABLE_HEADER_ROW ).getValues();
+  let data_col = 0;
+
+  for( ; data_col < 50; ++data_col )
+  {
+    if( data[ 0 ][ data_col ] == "" )
+    {
+      break;
+    }
+  }
+
+  return data_col;
+}
+
 /* **********************************************************
 *  Helper function that indicates whether a given calumn already exist in the sheet or not.
 */
@@ -107,7 +123,8 @@ function add_rows( sheet, params, columns_added )
 {
   Logger.log( "Adding rows..." );
   sheet.getRange(MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL).setValue( params.birth_year );
-  const model_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, MODEL_TABLE_WIDTH + columns_added );
+  const nb_columns = get_number_of_columns( sheet );
+  const model_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, nb_columns );
 
   var row = MODEL_TABLE_FIRST_ROW + 1;
   var year = sheet.getRange( MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL ).getValue() + 1;
