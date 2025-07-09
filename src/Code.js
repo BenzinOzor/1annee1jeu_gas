@@ -189,5 +189,5 @@ SpreadsheetApp.flush();
   const columns_added = add_columns( new_sheet, params );
   add_rows( new_sheet, params, columns_added );
 
-  add_participant_to_table_from_sheet( new_sheet );
+  add_participant_to_table_from_sheet( new_sheet, true );
 }

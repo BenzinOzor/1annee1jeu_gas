@@ -1,11 +1,16 @@
 function is_name_already_in_table( _home_sheet, _name )
 {
+  return get_participant_table_row( _home_sheet, _name ) >= 0;
+}
+
+function get_participant_table_row( _home_sheet, _name )
+{
   if( _name.length == 0 )
   {
-    return false;
+    return -1;
   }
   
-  var data = _home_sheet.getRange( get_column_letter( HOME_PARTICIPANTS_COL ) + ':' + get_column_letter( HOME_PARTICIPANTS_COL ) ).getValues();
+  var data = _home_sheet.getRange( get_column_letter( HOME_PARTICIPANTS_COL ) + HOME_PARTICIPANTS_FIRST_ROW + ':' + get_column_letter( HOME_PARTICIPANTS_COL ) ).getValues();
 
   var data_row = 0;
 
@@ -13,11 +18,11 @@ function is_name_already_in_table( _home_sheet, _name )
   {
     if( data[ data_row ][ 0 ] == _name )
     {
-      return true;
+      return HOME_PARTICIPANTS_FIRST_ROW + data_row;
     }
   }
 
-  return false;
+  return -1;
 }
 
 function get_first_empty_row( _home_sheet, _column, _first_row )
@@ -268,7 +273,10 @@ function add_missing_participants_to_table()
   reset_participants_stats_rules( home_sheet );
 }
 
-function add_participant_to_table_from_sheet( _participant_sheet )
+/* **********************************************************
+*  Add a single participant to the home table
+*/
+function add_participant_to_table_from_sheet( _participant_sheet, _check_participant_presence )
 {
   if( is_sheet_name_valid( _participant_sheet ) == false )
   {
@@ -277,6 +285,21 @@ function add_participant_to_table_from_sheet( _participant_sheet )
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+
+  if( _check_participant_presence )
+  {
+    // If we want to check if the participant is already in the table, we'll retrieve their row.
+    let _participant_row_index = get_participant_table_row( home_sheet, _participant_sheet.getName() );
+
+    // If we retrieved a valid row, it means the participant is already in the table and we only need to update their games to finish formula.
+    if( _participant_row_index >= 0 )
+    {
+      refresh_participant_line( _participant_sheet, _participant_row_index );
+      return;
+    }
+  }
+
+  
   let first_free_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
   
   Logger.log( "Adding '%s' to home participants list...", _participant_sheet.getName() );
@@ -286,4 +309,46 @@ function add_participant_to_table_from_sheet( _participant_sheet )
     Logger.log( "'%s' added!", _participant_sheet.getName() );
     set_participants_stats_rules( home_sheet, home_sheet.getRange( first_free_row, HOME_PARTICIPANTS_COL, 1, HOME_PARTICIPANTS_TABLE_WIDTH ) );
   }
+}
+
+function add_participant_to_table_from_current_sheet()
+{
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  add_participant_to_table_from_sheet( ss.getActiveSheet(), true );
+}
+
+/* **********************************************************
+*  Refresh the participant line in the table by updating the formula returning the game they have to finish.
+*  As the count of game is calculated via script and the tables can change order, the number can't be determined by formluaes, so we have to update it sometimes.
+*/
+function refresh_participant_line( _participant_sheet, _participant_row_index = -1 )
+{
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+
+  // If we already have the participant row, there is no need for all those verifications.
+  if( _participant_row_index < 0 )
+  {
+    if( is_sheet_name_valid( _participant_sheet ) == false )
+    {
+      return;
+    }
+
+    _participant_row_index = get_participant_table_row( home_sheet, _participant_sheet.getName() );
+
+    // If the participant isn't in the table already, add them.
+    if( _participant_row_index < 0 )
+    {
+      add_participant_to_table_from_sheet( _participant_sheet, false );
+      return;
+    }
+  }
+
+  // Last verification in case something went wrong above, or a bad index was given.
+  if( home_sheet.getRange( _participant_row_index, HOME_PARTICIPANTS_COL ).getValue() != _participant_sheet.getName() )
+    return;
+
+  const sheet_infos = finished_games_column( home_sheet, _participant_sheet, _participant_row_index );
+
+  games_to_finish_column( home_sheet, _participant_sheet, _participant_row_index, sheet_infos );
 }
