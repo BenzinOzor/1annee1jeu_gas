@@ -145,7 +145,8 @@ function add_columns( sheet, params )
   }
   if( params.verdict && does_column_exist( sheet, MODEL_VERDICT_COL_NAME ) == false )
   {
-    column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, MODEL_VERDICT_COL_NAME );
+    let commentary_col = get_column_index( sheet, "Commentaire" );
+    column = add_column( sheet, commentary_col + 1, MODEL_VERDICT_COL_NAME );
     
     Logger.log( "Added column: " + MODEL_VERDICT_COL_NAME );
   }

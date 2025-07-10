@@ -27,7 +27,7 @@ function get_participant_table_row( _home_sheet, _name )
 
 function get_first_empty_row( _home_sheet, _column, _first_row )
 {
-  var data = _home_sheet.getRange( get_column_letter( HOME_PARTICIPANTS_COL ) + _first_row + ':' + get_column_letter( HOME_PARTICIPANTS_COL ) ).getValues();
+  var data = _home_sheet.getRange( get_column_letter( _column ) + _first_row + ':' + get_column_letter( _column ) ).getValues();
 
   var data_row = 0;
 
@@ -242,6 +242,86 @@ function gather_participants()
 }
 
 /* **********************************************************
+*  Check if every person listed in the table still has a page and if all the people having a page are in the table.
+*/
+function refresh_participants_list()
+{
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+  
+  const last_row_before_refresh = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
+
+  remove_deleted_pages_from_table();
+  add_missing_participants_to_table();
+  
+  const last_row_after_refresh = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
+
+  if( last_row_after_refresh < last_row_before_refresh )
+  {
+    home_sheet.getRange( last_row_after_refresh, HOME_PARTICIPANTS_COL, last_row_before_refresh - last_row_after_refresh, HOME_PARTICIPANTS_TABLE_WIDTH ).clear();
+  }
+
+  reset_participants_stats_rules( home_sheet );
+}
+
+/* **********************************************************
+*  Remove from the home table the pages that have been deleted.
+*/
+function remove_deleted_pages_from_table()
+{
+  Logger.log( "Removing deleted pages from table..." );
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheets = ss.getSheets();
+  let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
+  let nb_removed_participants = 0;
+
+  const participants_col_letter = get_column_letter( HOME_PARTICIPANTS_COL );
+  
+  const last_row = get_first_empty_row( home_sheet, HOME_PARTICIPANTS_COL, HOME_PARTICIPANTS_FIRST_ROW );
+  let data = home_sheet.getRange( participants_col_letter + HOME_PARTICIPANTS_FIRST_ROW + ':' + participants_col_letter + last_row ).getValues();
+  const nb_participants = data.filter( String ).length;
+
+  let data_row = 0;
+  let participant_row = HOME_PARTICIPANTS_FIRST_ROW;
+
+  while( data_row < data.length )
+  {
+    let sheet_found = false;
+
+    Logger.log( "Checking if '%s' (%d) still exists...", data[ data_row ][ 0 ], data_row );
+
+    sheets.every( function( sheet )
+    {
+      if( data[ data_row ][ 0 ] == "" )
+      {
+        Logger.log( "Current line is empty, removing" );
+        sheet_found = true;
+        return false;
+      }
+
+      if( data[ data_row ][ 0 ] == sheet.getName() )
+      {
+        Logger.log( "'%s' found ! Moving on.", data[ data_row ][ 0 ] );
+        sheet_found = true;
+        return false;
+      }
+
+      return true;
+    });
+
+    if( sheet_found == false )
+    {
+      Logger.log( "'%s' not found ! Removing line %d.", data[ data_row ][ 0 ], participant_row );
+      home_sheet.getRange( participant_row + 1, HOME_PARTICIPANTS_COL, nb_participants, HOME_PARTICIPANTS_TABLE_WIDTH ).moveTo( home_sheet.getRange( participant_row, HOME_PARTICIPANTS_COL ) );
+    }
+    else
+      ++participant_row;
+
+    ++data_row;
+  }
+}
+
+/* **********************************************************
 *  Add the participants that weren't already in the list to the home page
 */
 function add_missing_participants_to_table()
@@ -269,8 +349,6 @@ function add_missing_participants_to_table()
   });
 
   Logger.log( "%d participants added to the table.", nb_added_participants );
-
-  reset_participants_stats_rules( home_sheet );
 }
 
 /* **********************************************************
