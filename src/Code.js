@@ -37,13 +37,21 @@ function get_number_of_columns( _participant_sheet )
 }
 
 /* **********************************************************
-*  Helper function that indicates whether a given calumn already exist in the sheet or not.
+*  Helper function that indicates whether a given column already exist in the sheet or not.
 */
 function does_column_exist( _sheet, _name )
 {
+  return get_column_index( _sheet, _name ) >= 0;
+}
+
+/* **********************************************************
+*  Helper function that returns the index of the given column.
+*/
+function get_column_index( _sheet, _name )
+{
   if( _name.length == 0 )
   {
-    return false;
+    return -1;
   }
   
   let data = _sheet.getRange( MODEL_TABLE_HEADER_ROW + ':' + MODEL_TABLE_HEADER_ROW ).getValues();
@@ -54,23 +62,52 @@ function does_column_exist( _sheet, _name )
   {
     if( data[ 0 ][ data_col ] == _name )
     {
-      return true;
+      return data_col + 1;
     }
   }
 
-  return false;
+  return -1;
+}
+
+/* **********************************************************
+*  Remove the given column from the newly created page, if it exists
+*/
+function remove_column( _sheet, _remove_column, _column_name )
+{
+  if( _remove_column == false )
+    return;
+
+  let column_index = get_column_index( _sheet, _column_name );
+
+  if( column_index < 0 )
+    return;
+
+  _sheet.deleteColumn( column_index );
+  Logger.log( "Removed column '%s'.", _column_name );
+}
+
+/* **********************************************************
+*  Remove all the columns that the user unchecked in the page creation popup
+*/
+function remove_unwanted_columns( _sheet, _params )
+{
+  Logger.log( "Removing unwanted columns..." );
+
+  remove_column( _sheet, _params.estimate == false && _params.delta == false, MODEL_ESTIMATE_COL_NAME );
+  remove_column( _sheet, _params.played == false && _params.delta == false, MODEL_PLAYED_COL_NAME );
+  remove_column( _sheet, _params.delta == false, MODEL_DELTA_COL_NAME );
+  remove_column( _sheet, _params.rating == false, MODEL_RATING_COL_NAME );
+  remove_column( _sheet, _params.verdict == false, MODEL_VERDICT_COL_NAME );
 }
 
 /* **********************************************************
 *  Add all the columns selected by the user in the new table
-*  Returns the number of added columns
 */
 function add_columns( sheet, params )
 {
   Logger.log( "Adding columns..." );
 
   var column = MODEL_TABLE_VERSION_COL;
-  var columns_added = 0;
 
   if( ( params.estimate || params.delta ) && does_column_exist( sheet, MODEL_ESTIMATE_COL_NAME ) == false )
   {
@@ -78,7 +115,7 @@ function add_columns( sheet, params )
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Estimation du temps que prendra le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat( "[h]:mm:ss" );
-    ++columns_added;
+
     Logger.log( "Added column: " + MODEL_ESTIMATE_COL_NAME );
   }
   if( ( params.played || params.delta ) && does_column_exist( sheet, MODEL_PLAYED_COL_NAME ) == false )
@@ -87,7 +124,7 @@ function add_columns( sheet, params )
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Temps passé sur le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
-    ++columns_added;
+    
     Logger.log( "Added column: " + MODEL_PLAYED_COL_NAME );
   }
   if( params.delta && does_column_exist( sheet, MODEL_DELTA_COL_NAME ) == false )
@@ -97,29 +134,27 @@ function add_columns( sheet, params )
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     new_range.setValue( '=if(A' + MODEL_TABLE_FIRST_ROW + ' = "Terminé";if(isblank(H' + MODEL_TABLE_FIRST_ROW + ');;H' + MODEL_TABLE_FIRST_ROW + ' - G' + MODEL_TABLE_FIRST_ROW + ');)' );
-    ++columns_added;
+
     Logger.log( "Added column: " + MODEL_DELTA_COL_NAME );
   }
   if( params.rating && does_column_exist( sheet, MODEL_RATING_COL_NAME ) == false )
   {
     column = add_column( sheet, column, MODEL_RATING_COL_NAME );
-    ++columns_added;
+    
     Logger.log( "Added column: " + MODEL_RATING_COL_NAME );
   }
   if( params.verdict && does_column_exist( sheet, MODEL_VERDICT_COL_NAME ) == false )
   {
     column = add_column( sheet, MODEL_TABLE_COM_COL + columns_added, MODEL_VERDICT_COL_NAME );
-    ++columns_added;
+    
     Logger.log( "Added column: " + MODEL_VERDICT_COL_NAME );
   }
-
-  return columns_added;
 }
 
 /* **********************************************************
 *  Add the necessary number of rows to the table according to birth year and season number
 */
-function add_rows( sheet, params, columns_added )
+function add_rows( sheet, params )
 {
   Logger.log( "Adding rows..." );
   sheet.getRange(MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL).setValue( params.birth_year );
@@ -186,8 +221,9 @@ SpreadsheetApp.flush();
 
   Logger.log( "New sheet created." );
 
-  const columns_added = add_columns( new_sheet, params );
-  add_rows( new_sheet, params, columns_added );
+  remove_unwanted_columns( new_sheet, params );
+  add_columns( new_sheet, params );
+  add_rows( new_sheet, params );
 
   add_participant_to_table_from_sheet( new_sheet, true );
 }
