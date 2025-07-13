@@ -12,7 +12,7 @@ function get_column_letter( _column_number )
 }
 
 /* **********************************************************
-*  Find where the completion column starts, in case the user moved their table vertically.
+*  Find where the table starts, in case the user moved it vertically.
 */
 function get_header_row( _participant_sheet, _range, _title )
 {
@@ -29,6 +29,31 @@ function get_header_row( _participant_sheet, _range, _title )
   }
 
   return 0;
+}
+
+/* **********************************************************
+*  Helper function that returns the index of the given column, starting at 0.
+*/
+function get_column_data_index( _sheet, _name, _row )
+{
+  if( _name.length == 0 )
+  {
+    return -1;
+  }
+  
+  let data = _sheet.getRange( _row + ':' + _row ).getValues();
+  let data_col = 0;
+
+  // We don't want to check endlessly, if the name wasn't in the first 20 columns, we consider it never will.
+  for( ; data_col < 20; ++data_col )
+  {
+    if( data[ 0 ][ data_col ] == _name )
+    {
+      return data_col;
+    }
+  }
+
+  return -1;
 }
 
 /* **********************************************************
@@ -66,6 +91,7 @@ function get_number_of_rows( _participant_sheet, _completion_header_row )
     // We check if there is a status text in the cell. We can't just check if the cell is empty in case the user customised something under their table.
     if( is_completion_status( data[ nb_rows ][ 0 ] ) == false )
     {
+      Logger.log( "'%s' is not a status, found %d rows", data[ nb_rows ][ 0 ], nb_rows );
       // As soon as we find something that's not a status, we assume we arrived at the end of the table and have our number of rows/games.
       return nb_rows;
     }

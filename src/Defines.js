@@ -35,3 +35,5 @@ const HOME_FINISHED_GAMES_COL = 3;  // C
 const HOME_GAMES_TO_FINISH_COL = 4; // D
 const HOME_PROGRESSION_BAR_COL = 5; // E
 const HOME_CURRENT_GAME_COL = 6;    // F
+
+const HOME_STATS_FIRST_COL = 8;     // H
