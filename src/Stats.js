@@ -4,14 +4,15 @@ function compute_stats()
     const sheets = ss.getSheets();
     let home_sheet = ss.getSheetByName( HOME_SHEET_NAME );
 
-    let stats = {m_finished_games: 0, m_total_nb_games: 0};
+    let stats = {m_finished_games: home_sheet.getRange( HOME_STATS_FINISHED_GAMES ).getValue(), m_total_nb_games: home_sheet.getRange( HOME_STATS_NB_GAMES ).getValue()};
+
+    Logger.log( "Games: %d / %d", stats.m_finished_games, stats.m_total_nb_games );
 
     sheets.forEach( function( _sheet )
     {
         if( is_sheet_name_valid( _sheet ) == false )
             return;
 
-        Logger.log( "Collecting stats for '%s'", _sheet.getName() );
         let sheet_results = collect_sheet_stats( _sheet );
 
         stats.m_finished_games += sheet_results.m_finished_games;
@@ -24,7 +25,8 @@ function compute_stats()
 
 function collect_sheet_stats( _sheet )
 {
-    const header_row = get_header_row( _sheet, "A:A", MODEL_STATE_COL_NAME ) + 1;
+    Logger.log( "Collecting stats for '%s'", _sheet.getName() );
+    const header_row = get_header_row( _sheet, "A:A", MODEL_STATE_COL_NAME );
     Logger.log( "looking for number of row, header row : %d", header_row );
     const nb_rows = get_number_of_rows( _sheet, header_row + 1 );
     const nb_cols = get_number_of_columns( _sheet );
@@ -34,13 +36,15 @@ function collect_sheet_stats( _sheet )
 
     const state_col_index = get_column_data_index( _sheet, MODEL_STATE_COL_NAME, header_row );
 
+    var years = get_birth_year_and_season( _sheet, header_row, nb_rows );
+
     let finished_games = 0;
-    let nb_games = 0;
+    let nb_games = years._season - years._birth_year + 1;
 
     for( data_row = 0; data_row < range_data.length; ++data_row )
     {
-        if( range_data[ data_row ][ state_col_index ] != GAME_STATE_REMPLACED && range_data[ data_row ][ state_col_index ] != GAME_STATE_IGNORED )
-            ++nb_games;
+        if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED )
+            --nb_games;
 
         if( range_data[ data_row ][ state_col_index ] == GAME_STATE_DONE || range_data[ data_row ][ state_col_index ] == GAME_STATE_ABANDONED )
             ++finished_games;

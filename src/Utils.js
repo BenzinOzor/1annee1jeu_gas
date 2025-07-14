@@ -13,18 +13,20 @@ function get_column_letter( _column_number )
 
 /* **********************************************************
 *  Find where the table starts, in case the user moved it vertically.
+*  Return the row of the given header starting at 1. 0 if not found.
 */
 function get_header_row( _participant_sheet, _range, _title )
 {
-  var data = _participant_sheet.getRange( _range ).getValues();
+  const data_range = _participant_sheet.getRange( _range );
+  let data = data_range.getValues();
 
-  var completion_header_row = 0;
+  let header_row = 0;
 
-  for( ; completion_header_row < data.length; ++completion_header_row )
+  for( ; header_row < data.length; ++header_row )
   {
-    if( data[ completion_header_row ][ 0 ] == _title )
+    if( data[ header_row ][ 0 ] == _title )
     {
-      return completion_header_row;
+      return data_range.getRow() + header_row;
     }
   }
 
@@ -80,10 +82,9 @@ function is_completion_status( _string )
 /* **********************************************************
 *  Count the number of rows in the user table. It can vary from the strict season - birth year if some lines have been added in case of game replacement for example.
 */
-function get_number_of_rows( _participant_sheet, _completion_header_row )
+function get_number_of_rows( _participant_sheet, _first_row )
 {
-  // We increment _completion_header_row to start at the first line under the header.
-  var data = _participant_sheet.getRange( "A" + ( _completion_header_row + 1 ) + ":A" ).getValues();
+  var data = _participant_sheet.getRange( "A" + _first_row + ":A" ).getValues();
   var nb_rows = 0;
 
   for( ; nb_rows < data.length; ++nb_rows )
@@ -91,7 +92,6 @@ function get_number_of_rows( _participant_sheet, _completion_header_row )
     // We check if there is a status text in the cell. We can't just check if the cell is empty in case the user customised something under their table.
     if( is_completion_status( data[ nb_rows ][ 0 ] ) == false )
     {
-      Logger.log( "'%s' is not a status, found %d rows", data[ nb_rows ][ 0 ], nb_rows );
       // As soon as we find something that's not a status, we assume we arrived at the end of the table and have our number of rows/games.
       return nb_rows;
     }

@@ -86,7 +86,7 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
   // First we find where the table begins.
   const completion_header_row = get_header_row( _participant_sheet, "A:A", MODEL_STATE_COL_NAME );
   // Then we determine how many rows there are in the participant table.
-  // We send completion_header_row + 1 because the index we got starts at 0 and we will use it in a get range, that starts at 1.
+  // We send completion_header_row + 1 because we want to give the first valid row after the header.
   const nb_rows = get_number_of_rows( _participant_sheet, completion_header_row + 1 );
 
   // Now that we gathered all the informations we need, we can begin to fill the cell with the formula.
@@ -99,11 +99,11 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
 /* **********************************************************
 *  Looks for birth year and season in the participant sheet year column. It's not necessarily the first and last year since the order can change.
 */
-function get_birth_year_and_season( _participant_sheet, _year_header_row, _nb_rows )
+function get_birth_year_and_season( _participant_sheet, _first_year_row, _nb_rows )
 {
   Logger.log( "Retrieving birth year and season from participant sheet..." );
   // We increment _year_header_row to start at the first line under the header.
-  var data = _participant_sheet.getRange( "B" + ( _year_header_row + 1 ) + ":B" ).getValues();
+  var data = _participant_sheet.getRange( "B" + _first_year_row + ":B" ).getValues();
   
   // To find the birth year and the season, we'll look for the smallest and highest numbers in the year column.
   // Looking at the first and last might not suffise as the participant may have changed the order by sorting their table with an other parameter than the year.
