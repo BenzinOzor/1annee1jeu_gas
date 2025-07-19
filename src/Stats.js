@@ -29,6 +29,9 @@ function compute_stats()
     stats.m_nb_finished_games = home_sheet.getRange( HOME_STATS_FINISHED_GAMES ).getValue();
     stats.m_nb_games = home_sheet.getRange( HOME_STATS_NB_GAMES ).getValue();
 
+    Logger.log( "Collecting stats of all sheets..." );
+    Logger.log( "Values from sheet: %d finished games out of %d", stats.m_nb_finished_games, stats.m_nb_games );
+
     sheets.forEach( function( _sheet )
     {
         if( is_sheet_name_valid( _sheet ) == false )
@@ -60,27 +63,24 @@ function insert_platforms_chart( _sheet, _stats )
     let chart = Charts.newPieChart()
     .setDataTable( data )
     .setTitle( "Répartition des plateformes" )
+    .setOption( 'legend.position', 'labeled' )
     //.setPosition( HOME_STATS_FIRST_COL, HOME_STATS_FIRST_ROW, 0, 0 )
     .setDimensions(906, 906)
     .build();
 
     //var htmlOutput = HtmlService.createHtmlOutput().setTitle('Répartition des plateformes');
     var imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
+    
     var imageUrl = "data:image/png;base64," + encodeURI(imageData);
 
-    // Insert the image in the A1
-    _sheet.insertImage(imageUrl, HOME_STATS_FIRST_COL, HOME_STATS_FIRST_ROW);
-    
-
-
-    //_sheet.insertChart( chart );
+    //let inserted_chart = _sheet.insertImage(imageUrl, HOME_STATS_FIRST_COL, HOME_STATS_FIRST_ROW);
+    //inserted_chart.setAltTextTitle( "platforms_repartition" );
 }
 
 function collect_sheet_stats( _sheet, _stats )
 {
-    Logger.log( "Collecting stats for '%s'", _sheet.getName() );
+    Logger.log( "   Collecting stats for '%s'", _sheet.getName() );
     const header_row = get_header_row( _sheet, "A:A", MODEL_STATE_COL_NAME );
-    Logger.log( "looking for number of row, header row : %d", header_row );
     const nb_rows = get_number_of_rows( _sheet, header_row + 1 );
     const nb_cols = get_number_of_columns( _sheet );
 
@@ -94,6 +94,7 @@ function collect_sheet_stats( _sheet, _stats )
 
     let finished_games = 0;
     let nb_games = years._season - years._birth_year + 1;
+    let treated_games = 0;
 
     for( data_row = 0; data_row < range_data.length; ++data_row )
     {
@@ -103,6 +104,10 @@ function collect_sheet_stats( _sheet, _stats )
         if( range_data[ data_row ][ state_col_index ] == GAME_STATE_DONE || range_data[ data_row ][ state_col_index ] == GAME_STATE_ABANDONED )
             ++finished_games;
 
+        // We don't want to do stats on ignored years or replaced games.
+        if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED || range_data[ data_row ][ state_col_index ] == GAME_STATE_REPLACED )
+            continue;
+
         if( _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] ) )
         {
             let temp = _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] );
@@ -111,10 +116,13 @@ function collect_sheet_stats( _sheet, _stats )
         }
         else
             _stats.m_platform_numbers.set( range_data[ data_row ][ platform_col_index ], 1 );
+
+        //Logger.log( "   %d - %s : %d", header_row + 1 + data_row, range_data[ data_row ][ platform_col_index ], _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] ) );
+        ++treated_games;
     }
 
-    // on s'arrête un jeu trop tôt ? calcul du nombre de jeu pas bon et différent de celui de l'accueil, plutot faire saison - birth comme sur l'accueil ?
-    Logger.log( "Found %d finished games out of %d total games in '%s'", finished_games, nb_games, _sheet.getName() );
+    Logger.log( "   %d treated games", treated_games );
+
     var result = {m_finished_games: finished_games, m_total_nb_games: nb_games};
     return result;
 }

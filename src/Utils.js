@@ -69,7 +69,7 @@ function is_completion_status( _string )
     case GAME_STATE_PLAYING:
     case GAME_STATE_DONE:
     case GAME_STATE_ABANDONED:
-    case GAME_STATE_REMPLACED:
+    case GAME_STATE_REPLACED:
     case GAME_STATE_IGNORED:
     {
       return true;

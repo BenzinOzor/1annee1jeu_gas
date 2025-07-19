@@ -7,7 +7,7 @@ const GAME_STATE_NOT_STARTED = "Pas commencé";
 const GAME_STATE_PLAYING = "En cours";
 const GAME_STATE_DONE = "Terminé";
 const GAME_STATE_ABANDONED = "Abandonné";
-const GAME_STATE_REMPLACED = "Remplacé";
+const GAME_STATE_REPLACED = "Remplacé";
 const GAME_STATE_IGNORED = "Ignoré";
 
 const MODEL_STATE_COL_NAME = "Complétion";
