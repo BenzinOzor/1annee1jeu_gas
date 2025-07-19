@@ -41,40 +41,49 @@ function compute_stats()
     });
 
     Logger.log( "Done collecting" );
-    insert_platforms_chart( home_sheet, stats );
+    fill_platfroms_stats( home_sheet, stats );
 }
 
-function insert_platforms_chart( _sheet, _stats )
+function fill_platfroms_stats( _sheet, _stats )
 {
     const sorted_platforms = new Map([..._stats.m_platform_numbers.entries()].sort((a, b) => b[1] - a[1]));
 
-    let data = Charts.newDataTable()
-    .addColumn( Charts.ColumnType.STRING, 'Plateforme' )
-    .addColumn( Charts.ColumnType.NUMBER, 'Nombre' );
-
+    let platform_row = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getRow();
+    const platform_name_col = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getColumn();
+    const platform_number_col = platform_name_col + 1;
+    
     sorted_platforms.forEach( function( _value, _key, _map )
     {
-        data.addRow( [ _key, _value ] );
-        Logger.log( "%s : %d", _key, _value );
+        let percentage = _value/_stats.m_nb_games*100;
+        _sheet.getRange( platform_row, platform_name_col ).setValue( _key );
+        _sheet.getRange( platform_row, platform_number_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
+
+        const family_infos = get_family_infos( _key );
+        let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
+        platform_range.setBackground( family_infos.m_background_color );
+        platform_range.setFontColor( family_infos.m_foreground_color );
+
+        Logger.log( "%d - %s : %d", platform_row, _key, _value );
+        ++platform_row;
     });
 
-    data.build();
+    for( const platform in PlatformName )
+    {
+        if( platform == PlatformName.None )
+            continue;
 
-    let chart = Charts.newPieChart()
-    .setDataTable( data )
-    .setTitle( "Répartition des plateformes" )
-    .setOption( 'legend.position', 'labeled' )
-    //.setPosition( HOME_STATS_FIRST_COL, HOME_STATS_FIRST_ROW, 0, 0 )
-    .setDimensions(906, 906)
-    .build();
+        if( !_stats.m_platform_numbers.get( PlatformName[ platform ] ) )
+        {
+            _sheet.getRange( platform_row, platform_name_col ).setValue( PlatformName[ platform ] );
+            _sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
 
-    //var htmlOutput = HtmlService.createHtmlOutput().setTitle('Répartition des plateformes');
-    var imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
-    
-    var imageUrl = "data:image/png;base64," + encodeURI(imageData);
-
-    //let inserted_chart = _sheet.insertImage(imageUrl, HOME_STATS_FIRST_COL, HOME_STATS_FIRST_ROW);
-    //inserted_chart.setAltTextTitle( "platforms_repartition" );
+            const family_infos = get_family_infos( PlatformName[ platform ] );
+            let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
+            platform_range.setBackground( family_infos.m_background_color );
+            platform_range.setFontColor( family_infos.m_foreground_color );
+            ++platform_row;
+        }
+    }
 }
 
 function collect_sheet_stats( _sheet, _stats )
@@ -89,6 +98,7 @@ function collect_sheet_stats( _sheet, _stats )
 
     const state_col_index = get_column_data_index( _sheet, MODEL_STATE_COL_NAME, header_row );
     const platform_col_index = get_column_data_index( _sheet, MODEL_PLATFORM_COL_NAME, header_row );
+    const game_col_index = get_column_data_index( _sheet, MODEL_GAME_COL_NAME, header_row );
 
     var years = get_birth_year_and_season( _sheet, header_row, nb_rows );
 
@@ -106,6 +116,10 @@ function collect_sheet_stats( _sheet, _stats )
 
         // We don't want to do stats on ignored years or replaced games.
         if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED || range_data[ data_row ][ state_col_index ] == GAME_STATE_REPLACED )
+            continue;
+
+        // We don't want to do stats on empty game rows.
+        if( range_data[ data_row ][ game_col_index ] == "" )
             continue;
 
         if( _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] ) )

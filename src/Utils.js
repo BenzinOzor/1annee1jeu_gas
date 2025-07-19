@@ -113,3 +113,83 @@ function is_sheet_name_valid( _sheet )
 
     return true;
 }
+
+function get_family_infos( _platform )
+{
+    let platform = new Platform;
+    platform.m_name = _platform;
+
+    switch( platform.m_name )
+    {
+      case PlatformName.PC:
+      {
+        platform.m_family = Family.PC;
+        platform.m_background_color = "#473822";
+        platform.m_foreground_color = "#ffe5a0";
+        break;
+      }
+      case PlatformName.PS1:
+      case PlatformName.PS2:
+      case PlatformName.PS3:
+      case PlatformName.PS4:
+      case PlatformName.PS5:
+      case PlatformName.PSP:
+      case PlatformName.Vita:
+      {
+        platform.m_family = Family.Sony;
+        platform.m_background_color = "#0a53a8";
+        platform.m_foreground_color = "#bfe0f6";
+        break;
+      }
+      case PlatformName.Xbox:
+      case PlatformName.Xbox360:
+      case PlatformName.XONE:
+      case PlatformName.XboxSeries:
+      {
+        platform.m_family = Family.Xbox;
+        platform.m_background_color = "#11734b";
+        platform.m_foreground_color = "#d4edbc";
+        break;
+      }
+      case PlatformName.NES:
+      case PlatformName.SNES:
+      case PlatformName.N64:
+      case PlatformName.GameCube:
+      case PlatformName.Wii:
+      case PlatformName.WiiU:
+      case PlatformName.Switch:
+      case PlatformName.Switch2:
+      case PlatformName.GameBoy:
+      case PlatformName.GameBoyColor:
+      case PlatformName.GBA:
+      case PlatformName.DS:
+      case PlatformName.ThreeDS:
+      {
+        platform.m_family = Family.Nintendo;
+        platform.m_background_color = "#ff3f3f";
+        platform.m_foreground_color = "#ffffff";
+        break;
+      }
+      case PlatformName.MasterSystem:
+      case PlatformName.MegaDrive:
+      case PlatformName.GameGear:
+      case PlatformName.MegaCD:
+      case PlatformName.Saturn:
+      case PlatformName.Dreamcast:
+      {
+        platform.m_family = Family.Sega;
+        platform.m_background_color = "#bfe1f6";
+        platform.m_foreground_color = "#0a53a8";
+        break;
+      }
+      case PlatformName.NeoGeo:
+      {
+        platform.m_family = Family.None;
+        platform.m_background_color = "#ffe5a0";
+        platform.m_foreground_color = "#473821";
+        break;
+      }
+    }
+
+    return platform;
+}

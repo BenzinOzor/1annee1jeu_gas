@@ -36,7 +36,67 @@ const HOME_GAMES_TO_FINISH_COL = 4; // D
 const HOME_PROGRESSION_BAR_COL = 5; // E
 const HOME_CURRENT_GAME_COL = 6;    // F
 
+// STATS
 const HOME_STATS_FIRST_COL = 8;     // H
 const HOME_STATS_FIRST_ROW = 34;
 const HOME_STATS_FINISHED_GAMES = "J31";
 const HOME_STATS_NB_GAMES = "N31";
+const HOME_STATS_PLATFORM_CELL = "H35";
+
+const Family =
+{
+    None: 'None',
+    PC: 'PC',
+    Sony: 'Sony',
+    Xbox: 'Xbox',
+    Nintendo: 'Nintendo',
+    Sega: 'Sega'
+}
+
+const PlatformName = 
+{
+    None: 'None',
+    PC: 'PC',
+    PS1: 'PS1',
+    PS2: 'PS2',
+    PS3: 'PS3',
+    PS4: 'PS4',
+    PS5: 'PS5',
+    PSP: 'PSP',
+    Vita: 'Vita',
+    Xbox: 'Xbox',
+    Xbox360: 'X360',
+    XONE: 'XONE',
+    XboxSeries: 'Series X|S',
+    NES: 'NES',
+    SNES: 'SNES',
+    N64: 'N64',
+    GameCube: 'GameCube',
+    Wii: 'Wii',
+    WiiU: 'Wii U',
+    Switch: 'Switch',
+    Switch2: 'Switch 2',
+    GameBoy: 'Game Boy',
+    GameBoyColor: 'Game Boy Color',
+    GBA: 'GBA',
+    DS: 'DS',
+    ThreeDS: '3DS',
+    MasterSystem: 'Master System',
+    MegaDrive: 'Mega Drive',
+    GameGear: 'Game Gear',
+    MegaCD: 'Mega-CD',
+    Saturn: 'Saturn',
+    Dreamcast: 'Dreamcast',
+    NeoGeo: 'Neo-Geo'
+}
+
+class Platform
+{
+    constructor()
+    {
+        this.m_family = Family.None;
+        this.m_background_color = "#ffffff";
+        this.m_foreground_color = "#000000";
+        this.m_name = PlatformName.None;
+    }
+}
