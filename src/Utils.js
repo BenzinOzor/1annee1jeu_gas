@@ -189,6 +189,11 @@ function get_family_infos( _platform )
         platform.m_foreground_color = "#473821";
         break;
       }
+      default:
+      {
+        platform.m_name = PlatformName.None;
+        break;
+      }
     }
 
     return platform;

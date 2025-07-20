@@ -89,14 +89,3 @@ const PlatformName =
     Dreamcast: 'Dreamcast',
     NeoGeo: 'Neo-Geo'
 }
-
-class Platform
-{
-    constructor()
-    {
-        this.m_family = Family.None;
-        this.m_background_color = "#ffffff";
-        this.m_foreground_color = "#000000";
-        this.m_name = PlatformName.None;
-    }
-}

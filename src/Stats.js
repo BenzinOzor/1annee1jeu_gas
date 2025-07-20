@@ -1,9 +1,12 @@
-class NumberedStat
+class Platform
 {
     constructor()
     {
-        this.m_name = "";   // Platform name, version, etc..
-        this.m_number = 0;  // How many has been encountered.
+        this.m_family = Family.None;
+        this.m_background_color = "#ffffff";
+        this.m_foreground_color = "#000000";
+        this.m_name = PlatformName.None;
+        this.m_count = 0;
     }
 }
 
@@ -13,8 +16,9 @@ class Stats
     {
         this.m_nb_games = 0;
         this.m_nb_finished_games = 0;
-        this.m_platform_numbers = new Map();
+        this.m_family_numbers = new Map();
         this.m_versions_numbers = [];
+        this.m_platforms = [];
     }
 }
 
@@ -37,53 +41,60 @@ function compute_stats()
         if( is_sheet_name_valid( _sheet ) == false )
             return;
 
-        let sheet_results = collect_sheet_stats( _sheet, stats );
+        collect_sheet_stats( _sheet, stats );
     });
 
     Logger.log( "Done collecting" );
+    handle_stats( stats );
     fill_platfroms_stats( home_sheet, stats );
 }
 
-function fill_platfroms_stats( _sheet, _stats )
+function handle_stats( _stats )
 {
-    const sorted_platforms = new Map([..._stats.m_platform_numbers.entries()].sort((a, b) => b[1] - a[1]));
+    Logger.log( "   Sorting and handling collected stats..." );
 
-    let platform_row = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getRow();
-    const platform_name_col = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getColumn();
-    const platform_number_col = platform_name_col + 1;
-    
-    sorted_platforms.forEach( function( _value, _key, _map )
-    {
-        let percentage = _value/_stats.m_nb_games*100;
-        _sheet.getRange( platform_row, platform_name_col ).setValue( _key );
-        _sheet.getRange( platform_row, platform_number_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
-
-        const family_infos = get_family_infos( _key );
-        let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
-        platform_range.setBackground( family_infos.m_background_color );
-        platform_range.setFontColor( family_infos.m_foreground_color );
-
-        Logger.log( "%d - %s : %d", platform_row, _key, _value );
-        ++platform_row;
-    });
+    _stats.m_platforms.sort( (a,b) => b.m_count - a.m_count );
 
     for( const platform in PlatformName )
     {
         if( platform == PlatformName.None )
             continue;
 
-        if( !_stats.m_platform_numbers.get( PlatformName[ platform ] ) )
+        if( !_stats.m_platforms.find( Platform => Platform.m_name === PlatformName[ platform ] ) )
         {
-            _sheet.getRange( platform_row, platform_name_col ).setValue( PlatformName[ platform ] );
-            _sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
+            let new_platform = get_family_infos( PlatformName[ platform ] );
 
-            const family_infos = get_family_infos( PlatformName[ platform ] );
-            let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
-            platform_range.setBackground( family_infos.m_background_color );
-            platform_range.setFontColor( family_infos.m_foreground_color );
-            ++platform_row;
+            if( new_platform.m_name != PlatformName.None )
+            {
+                _stats.m_platforms.push( new_platform );
+            }
         }
     }
+}
+
+function fill_platfroms_stats( _sheet, _stats )
+{
+    let platform_row = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getRow();
+    const platform_name_col = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getColumn();
+    const platform_number_col = platform_name_col + 1;
+    
+    _stats.m_platforms.forEach( function( _platform )
+    {
+        let percentage = _platform.m_count/_stats.m_nb_games*100;
+        _sheet.getRange( platform_row, platform_name_col ).setValue( _platform.m_name );
+
+        if( _platform.m_count == 0 )
+            _sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
+        else
+            _sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_count + " (" + percentage.toFixed() + "%)" );
+
+        let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
+        platform_range.setBackground( _platform.m_background_color );
+        platform_range.setFontColor( _platform.m_foreground_color );
+
+        Logger.log( "%d - %s : %d", platform_row, _platform.m_name, _platform.m_count );
+        ++platform_row;
+    });
 }
 
 function collect_sheet_stats( _sheet, _stats )
@@ -122,21 +133,24 @@ function collect_sheet_stats( _sheet, _stats )
         if( range_data[ data_row ][ game_col_index ] == "" )
             continue;
 
-        if( _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] ) )
+        let platform = _stats.m_platforms.find( Platform => Platform.m_name === range_data[ data_row ][ platform_col_index ] );
+        if( platform != null )
         {
-            let temp = _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] );
-            ++temp;
-            _stats.m_platform_numbers.set( range_data[ data_row ][ platform_col_index ], temp );
+            ++platform.m_count;
         }
         else
-            _stats.m_platform_numbers.set( range_data[ data_row ][ platform_col_index ], 1 );
+        {
+            let new_platform = get_family_infos( range_data[ data_row ][ platform_col_index ] );
 
-        //Logger.log( "   %d - %s : %d", header_row + 1 + data_row, range_data[ data_row ][ platform_col_index ], _stats.m_platform_numbers.get( range_data[ data_row ][ platform_col_index ] ) );
+            if( new_platform.m_name != PlatformName.None )
+            {
+                new_platform.m_count = 1;
+                _stats.m_platforms.push( new_platform );
+            }
+        }
+
         ++treated_games;
     }
 
     Logger.log( "   %d treated games", treated_games );
-
-    var result = {m_finished_games: finished_games, m_total_nb_games: nb_games};
-    return result;
 }
