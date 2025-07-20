@@ -43,6 +43,7 @@ const HOME_STATS_FINISHED_GAMES = "J31";
 const HOME_STATS_NB_GAMES = "N31";
 const HOME_STATS_PLATFORM_CELL = "H35";
 const HOME_STATS_FAMILY_CELL = "K35";
+const HOME_STATS_VERSION_CELL = "N35";
 
 const Family =
 {
@@ -89,4 +90,12 @@ const PlatformName =
     Saturn: 'Saturn',
     Dreamcast: 'Dreamcast',
     NeoGeo: 'Neo-Geo'
+}
+
+const VersionName =
+{
+    Original: 'Original',
+    Remake: 'Remake',
+    Remaster: 'Remaster',
+    Emulation: 'Émulation'
 }

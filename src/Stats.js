@@ -10,13 +10,24 @@ class Platform
     }
 }
 
+class Version
+{
+    constructor()
+    {
+        this.m_version = VersionName.Original;
+        this.m_background_color = "#ffffff";
+        this.m_foreground_color = "#000000";
+        this.m_count = 0;
+    }
+}
+
 class Stats
 {
     constructor()
     {
         this.m_nb_games = 0;
         this.m_nb_finished_games = 0;
-        this.m_versions_numbers = [];
+        this.m_versions = [];           // Array of Version
         this.m_platforms = [];          // Array of Platform
         this.m_families_counts = new Map();
     }
@@ -51,6 +62,7 @@ function compute_stats()
     handle_stats( stats );
     fill_platfroms_stats( home_sheet, stats );
     fill_families_stats( home_sheet, stats );
+    fill_versions_stats( home_sheet, stats );
 }
 
 /* **********************************************************
@@ -60,8 +72,10 @@ function handle_stats( _stats )
 {
     Logger.log( "   Sorting and handling collected stats..." );
 
+    // Sort found platform from most used to least.
     _stats.m_platforms.sort( (a,b) => b.m_count - a.m_count );
 
+    // Add any missing platform so we always have a complete list in the sheet.
     for( const platform in PlatformName )
     {
         if( platform == PlatformName.None )
@@ -78,6 +92,7 @@ function handle_stats( _stats )
         }
     }
 
+    // Compute all the platforms families to make their own stats.
     _stats.m_families_counts = new Map();
 
     _stats.m_families_counts.set( Family.PC, 0 );
@@ -94,8 +109,26 @@ function handle_stats( _stats )
         _stats.m_families_counts.set( _platform.m_family, _stats.m_families_counts.get( _platform.m_family ) + _platform.m_count );
     });
 
-    
     _stats.m_families_counts = new Map([..._stats.m_families_counts.entries()].sort((a, b) => b[1] - a[1]));
+
+    // Sort version from most occuring to the least.
+    _stats.m_versions.sort( (a,b) => b.m_count - a.m_count );
+
+    // Seems quite unlikely but adding any missing version we didn't find in the read sheets.
+    for( const version in VersionName )
+    {
+        if( !_stats.m_versions.find( Version => Version.m_version === VersionName[ version ] ) )
+        {
+            let new_version = new Version;
+            new_version.m_version = version;
+            let colors = get_version_colors( new_version.m_version );
+
+            new_version.m_background_color = colors.m_background_color;
+            new_version.m_foreground_color = colors.m_foreground_color;
+
+            _stats.m_versions.push( new_version );
+        }
+    }
 }
 
 /* **********************************************************
@@ -121,7 +154,6 @@ function fill_platfroms_stats( _sheet, _stats )
         platform_range.setBackground( _platform.m_background_color );
         platform_range.setFontColor( _platform.m_foreground_color );
 
-        //Logger.log( "%d - %s : %d", platform_row, _platform.m_name, _platform.m_count );
         ++platform_row;
     });
 }
@@ -150,8 +182,35 @@ function fill_families_stats( _sheet, _stats )
         platform_range.setBackground( family_colors.m_background_color );
         platform_range.setFontColor( family_colors.m_foreground_color );
 
-        Logger.log( "%d - %s : %d", family_row, _key, _value );
         ++family_row;
+    });
+}
+
+/* **********************************************************
+*  Fill the version stats columns
+*/
+function fill_versions_stats( _sheet, _stats )
+{
+    let version_row = _sheet.getRange( HOME_STATS_VERSION_CELL ).getRow();
+    const version_name_col = _sheet.getRange( HOME_STATS_VERSION_CELL ).getColumn();
+    const version_number_col = version_name_col + 1;
+    
+    _stats.m_versions.forEach( function( _version )
+    {
+        let percentage = _version.m_count/_stats.m_nb_games*100;
+        _sheet.getRange( version_row, version_name_col ).setValue( _version.m_version );
+
+        if( _version.m_count == 0 )
+            _sheet.getRange( version_row, version_number_col ).setValue( "-" );
+        else
+            _sheet.getRange( version_row, version_number_col ).setValue( _version.m_count + " (" + percentage.toFixed() + "%)" );
+
+        let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
+        platform_range.setBackground( _version.m_background_color );
+        platform_range.setFontColor( _version.m_foreground_color );
+
+        Logger.log( "%d - %s : %d", version_row, _version.m_version, _version.m_count );
+        ++version_row;
     });
 }
 
@@ -171,20 +230,14 @@ function collect_sheet_stats( _sheet, _stats )
     const state_col_index = get_column_data_index( _sheet, MODEL_STATE_COL_NAME, header_row );
     const platform_col_index = get_column_data_index( _sheet, MODEL_PLATFORM_COL_NAME, header_row );
     const game_col_index = get_column_data_index( _sheet, MODEL_GAME_COL_NAME, header_row );
+    const version_col_index = get_column_data_index( _sheet, MODEL_VERSION_COL_NAME, header_row );
 
-    var years = get_birth_year_and_season( _sheet, header_row, nb_rows );
-
-    let finished_games = 0;
-    let nb_games = years._season - years._birth_year + 1;
     let treated_games = 0;
 
     for( data_row = 0; data_row < range_data.length; ++data_row )
     {
-        if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED )
-            --nb_games;
-
-        if( range_data[ data_row ][ state_col_index ] == GAME_STATE_DONE || range_data[ data_row ][ state_col_index ] == GAME_STATE_ABANDONED )
-            ++finished_games;
+        if( state_col_index < 0 || game_col_index < 0 )
+            continue;
 
         // We don't want to do stats on ignored years or replaced games.
         if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED || range_data[ data_row ][ state_col_index ] == GAME_STATE_REPLACED )
@@ -210,6 +263,30 @@ function collect_sheet_stats( _sheet, _stats )
             }
         }
 
+        if( version_col_index >= 0 )
+        {
+            Logger.log( "       Looking for version %s", range_data[ data_row ][ version_col_index ] );
+            let version = _stats.m_versions.find( Version => Version.m_version === range_data[ data_row ][ version_col_index ] );
+            if( version != null )
+            {
+                ++version.m_count;
+            }
+            else
+            {
+                let new_version = new Version;
+                new_version.m_version = range_data[ data_row ][ version_col_index ];
+                let colors = get_version_colors( new_version.m_version );
+            
+                new_version.m_background_color = colors.m_background_color;
+                new_version.m_foreground_color = colors.m_foreground_color;
+            
+                new_version.m_count = 1;
+                _stats.m_versions.push( new_version );
+            }
+        
+            version = _stats.m_versions.find( Version => Version.m_version === range_data[ data_row ][ version_col_index ] );
+            Logger.log( "       %s - %d", version.m_version, version.m_count );
+        }
         ++treated_games;
     }
 

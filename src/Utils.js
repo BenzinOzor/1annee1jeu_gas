@@ -116,43 +116,78 @@ function is_sheet_name_valid( _sheet )
 
 function get_family_colors( _family )
 {
-  var color = {m_background_color: "#000000", m_foreground_color: "#000000"};
+  var colors = {m_background_color: "#ffffff", m_foreground_color: "#000000"};
 
   switch( _family )
   {
     case Family.PC:
     {
-      color.m_background_color = "#473822";
-      color.m_foreground_color = "#ffe5a0";
+      colors.m_background_color = "#473822";
+      colors.m_foreground_color = "#ffe5a0";
       break;
     }
     case Family.Sony:
     {
-      color.m_background_color = "#0a53a8";
-      color.m_foreground_color = "#bfe0f6";
+      colors.m_background_color = "#0a53a8";
+      colors.m_foreground_color = "#bfe0f6";
       break;
     }
     case Family.Xbox:
     {
-      color.m_background_color = "#11734b";
-      color.m_foreground_color = "#d4edbc";
+      colors.m_background_color = "#11734b";
+      colors.m_foreground_color = "#d4edbc";
       break;
     }
     case Family.Nintendo:
     {
-      color.m_background_color = "#ff3f3f";
-      color.m_foreground_color = "#ffffff";
+      colors.m_background_color = "#ff3f3f";
+      colors.m_foreground_color = "#ffffff";
       break;
     }
     case Family.Sega:
     {
-      color.m_background_color = "#bfe1f6";
-      color.m_foreground_color = "#0a53a8";
+      colors.m_background_color = "#bfe1f6";
+      colors.m_foreground_color = "#0a53a8";
       break;
     }
   }
 
-  return color;
+  return colors;
+}
+
+function get_version_colors( _version )
+{
+  var colors = {m_background_color: "#ffffff", m_foreground_color: "#000000"};
+
+  switch( _version )
+  {
+    case VersionName.Original:
+    {
+      colors.m_background_color = "#028090";
+      colors.m_foreground_color = "#ffffff";
+      break;
+    }
+    case VersionName.Remake:
+    {
+      colors.m_background_color = "#0038a8";
+      colors.m_foreground_color = "#ffffff";
+      break;
+    }
+    case VersionName.Remaster:
+    {
+      colors.m_background_color = "#9b4f96";
+      colors.m_foreground_color = "#ffffff";
+      break;
+    }
+    case VersionName.Emulation:
+    {
+      colors.m_background_color = "#d60270";
+      colors.m_foreground_color = "#ffffff";
+      break;
+    }
+  }
+
+  return colors;
 }
 
 function get_family_infos( _platform )
