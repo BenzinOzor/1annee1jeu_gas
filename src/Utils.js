@@ -114,6 +114,47 @@ function is_sheet_name_valid( _sheet )
     return true;
 }
 
+function get_family_colors( _family )
+{
+  var color = {m_background_color: "#000000", m_foreground_color: "#000000"};
+
+  switch( _family )
+  {
+    case Family.PC:
+    {
+      color.m_background_color = "#473822";
+      color.m_foreground_color = "#ffe5a0";
+      break;
+    }
+    case Family.Sony:
+    {
+      color.m_background_color = "#0a53a8";
+      color.m_foreground_color = "#bfe0f6";
+      break;
+    }
+    case Family.Xbox:
+    {
+      color.m_background_color = "#11734b";
+      color.m_foreground_color = "#d4edbc";
+      break;
+    }
+    case Family.Nintendo:
+    {
+      color.m_background_color = "#ff3f3f";
+      color.m_foreground_color = "#ffffff";
+      break;
+    }
+    case Family.Sega:
+    {
+      color.m_background_color = "#bfe1f6";
+      color.m_foreground_color = "#0a53a8";
+      break;
+    }
+  }
+
+  return color;
+}
+
 function get_family_infos( _platform )
 {
     let platform = new Platform;
@@ -124,8 +165,6 @@ function get_family_infos( _platform )
       case PlatformName.PC:
       {
         platform.m_family = Family.PC;
-        platform.m_background_color = "#473822";
-        platform.m_foreground_color = "#ffe5a0";
         break;
       }
       case PlatformName.PS1:
@@ -137,8 +176,6 @@ function get_family_infos( _platform )
       case PlatformName.Vita:
       {
         platform.m_family = Family.Sony;
-        platform.m_background_color = "#0a53a8";
-        platform.m_foreground_color = "#bfe0f6";
         break;
       }
       case PlatformName.Xbox:
@@ -147,8 +184,6 @@ function get_family_infos( _platform )
       case PlatformName.XboxSeries:
       {
         platform.m_family = Family.Xbox;
-        platform.m_background_color = "#11734b";
-        platform.m_foreground_color = "#d4edbc";
         break;
       }
       case PlatformName.NES:
@@ -166,8 +201,6 @@ function get_family_infos( _platform )
       case PlatformName.ThreeDS:
       {
         platform.m_family = Family.Nintendo;
-        platform.m_background_color = "#ff3f3f";
-        platform.m_foreground_color = "#ffffff";
         break;
       }
       case PlatformName.MasterSystem:
@@ -178,8 +211,6 @@ function get_family_infos( _platform )
       case PlatformName.Dreamcast:
       {
         platform.m_family = Family.Sega;
-        platform.m_background_color = "#bfe1f6";
-        platform.m_foreground_color = "#0a53a8";
         break;
       }
       case PlatformName.NeoGeo:
@@ -194,6 +225,14 @@ function get_family_infos( _platform )
         platform.m_name = PlatformName.None;
         break;
       }
+    }
+
+    if( platform.m_family != Family.None )
+    {
+      const colors = get_family_colors( platform.m_family );
+
+      platform.m_background_color = colors.m_background_color;
+      platform.m_foreground_color = colors.m_foreground_color;
     }
 
     return platform;

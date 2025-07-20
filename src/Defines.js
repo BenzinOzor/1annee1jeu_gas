@@ -42,6 +42,7 @@ const HOME_STATS_FIRST_ROW = 34;
 const HOME_STATS_FINISHED_GAMES = "J31";
 const HOME_STATS_NB_GAMES = "N31";
 const HOME_STATS_PLATFORM_CELL = "H35";
+const HOME_STATS_FAMILY_CELL = "K35";
 
 const Family =
 {
@@ -50,7 +51,7 @@ const Family =
     Sony: 'Sony',
     Xbox: 'Xbox',
     Nintendo: 'Nintendo',
-    Sega: 'Sega'
+    Sega: 'Sega',
 }
 
 const PlatformName = 

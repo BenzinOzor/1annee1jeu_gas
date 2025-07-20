@@ -16,12 +16,15 @@ class Stats
     {
         this.m_nb_games = 0;
         this.m_nb_finished_games = 0;
-        this.m_family_numbers = new Map();
         this.m_versions_numbers = [];
-        this.m_platforms = [];
+        this.m_platforms = [];          // Array of Platform
+        this.m_families_counts = new Map();
     }
 }
 
+/* **********************************************************
+*  Parse all sheets and collect then display stats on the home sheet
+*/
 function compute_stats()
 {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -47,8 +50,12 @@ function compute_stats()
     Logger.log( "Done collecting" );
     handle_stats( stats );
     fill_platfroms_stats( home_sheet, stats );
+    fill_families_stats( home_sheet, stats );
 }
 
+/* **********************************************************
+*  After data collection, sort the found stats and add missing platforms
+*/
 function handle_stats( _stats )
 {
     Logger.log( "   Sorting and handling collected stats..." );
@@ -70,8 +77,30 @@ function handle_stats( _stats )
             }
         }
     }
+
+    _stats.m_families_counts = new Map();
+
+    _stats.m_families_counts.set( Family.PC, 0 );
+    _stats.m_families_counts.set( Family.Sony, 0 );
+    _stats.m_families_counts.set( Family.Xbox, 0 );
+    _stats.m_families_counts.set( Family.Nintendo, 0 );
+    _stats.m_families_counts.set( Family.Sega, 0 );
+
+    _stats.m_platforms.forEach( function( _platform )
+    {
+        if( _platform.m_family == Family.None )
+            return;
+
+        _stats.m_families_counts.set( _platform.m_family, _stats.m_families_counts.get( _platform.m_family ) + _platform.m_count );
+    });
+
+    
+    _stats.m_families_counts = new Map([..._stats.m_families_counts.entries()].sort((a, b) => b[1] - a[1]));
 }
 
+/* **********************************************************
+*  Fill the platform stats columns
+*/
 function fill_platfroms_stats( _sheet, _stats )
 {
     let platform_row = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getRow();
@@ -92,11 +121,43 @@ function fill_platfroms_stats( _sheet, _stats )
         platform_range.setBackground( _platform.m_background_color );
         platform_range.setFontColor( _platform.m_foreground_color );
 
-        Logger.log( "%d - %s : %d", platform_row, _platform.m_name, _platform.m_count );
+        //Logger.log( "%d - %s : %d", platform_row, _platform.m_name, _platform.m_count );
         ++platform_row;
     });
 }
 
+/* **********************************************************
+*  Fill the families stats columns
+*/
+function fill_families_stats( _sheet, _stats )
+{
+    let family_row = _sheet.getRange( HOME_STATS_FAMILY_CELL ).getRow();
+    const family_name_col = _sheet.getRange( HOME_STATS_FAMILY_CELL ).getColumn();
+    const family_count_col = family_name_col + 1;
+    
+    _stats.m_families_counts.forEach( function( _value, _key, _map )
+    {
+        let percentage = _value/_stats.m_nb_games*100;
+        _sheet.getRange( family_row, family_name_col ).setValue( _key );
+
+        if( _value == 0 )
+            _sheet.getRange( family_row, family_count_col ).setValue( "-" );
+        else
+            _sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
+
+        const family_colors = get_family_colors( _key );
+        let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
+        platform_range.setBackground( family_colors.m_background_color );
+        platform_range.setFontColor( family_colors.m_foreground_color );
+
+        Logger.log( "%d - %s : %d", family_row, _key, _value );
+        ++family_row;
+    });
+}
+
+/* **********************************************************
+*  Retrieve stats from a given sheet and update the stat class
+*/
 function collect_sheet_stats( _sheet, _stats )
 {
     Logger.log( "   Collecting stats for '%s'", _sheet.getName() );
