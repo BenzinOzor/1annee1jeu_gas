@@ -37,9 +37,7 @@ const HOME_PROGRESSION_BAR_COL = 5; // E
 const HOME_CURRENT_GAME_COL = 6;    // F
 
 // STATS
-const HOME_STATS_RANGE = "H26:P95";
-const HOME_STATS_WIDTH = 9;
-const HOME_STATS_HEIGHT = 69;
+const HOME_STATS_RANGE = "H26:P103";
 
 const HOME_STATS_FINISHED_GAMES = "Jeux terminés";
 const HOME_STATS_NB_GAMES = "Nombre total de jeux";
