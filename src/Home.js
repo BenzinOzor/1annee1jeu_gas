@@ -74,7 +74,7 @@ function get_finished_games_formula( _participant_sheet, _first_row, _nb_rows )
 {
   const participant_range = get_participant_status_range( _participant_sheet, _first_row, _nb_rows );
 
-  return "=" + get_status_count_formula( participant_range, GAME_STATE_DONE ) + " + " + get_status_count_formula( participant_range, GAME_STATE_ABANDONED );
+  return "=" + get_status_count_formula( participant_range, GameState.Done ) + " + " + get_status_count_formula( participant_range, GameState.Abandoned );
 }
 
 /* **********************************************************
@@ -144,7 +144,7 @@ function games_to_finish_column( _home_sheet, _participant_sheet, _row, _sheet_i
 
   const participant_range = get_participant_status_range( _participant_sheet, _sheet_infos.header_row + 1, _sheet_infos.nb_rows );
 
-  range.setValue( "=" + (years._season - years._birth_year + 1) + " - " + get_status_count_formula( participant_range, GAME_STATE_IGNORED ) );
+  range.setValue( "=" + (years._season - years._birth_year + 1) + " - " + get_status_count_formula( participant_range, GameState.Ignored ) );
 }
 
 /* **********************************************************

@@ -249,7 +249,7 @@ function collect_sheet_stats( _sheet, _stats )
             continue;
 
         // We don't want to do stats on ignored years or replaced games.
-        if( range_data[ data_row ][ state_col_index ] == GAME_STATE_IGNORED || range_data[ data_row ][ state_col_index ] == GAME_STATE_REPLACED )
+        if( range_data[ data_row ][ state_col_index ] == GameState.Ignored || range_data[ data_row ][ state_col_index ] == GameState.Replaced )
             continue;
 
         // We don't want to do stats on empty game rows.

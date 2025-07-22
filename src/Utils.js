@@ -65,12 +65,12 @@ function is_completion_status( _string )
 {
   switch( _string )
   {
-    case GAME_STATE_NOT_STARTED:
-    case GAME_STATE_PLAYING:
-    case GAME_STATE_DONE:
-    case GAME_STATE_ABANDONED:
-    case GAME_STATE_REPLACED:
-    case GAME_STATE_IGNORED:
+    case GameState.NotStarted:
+    case GameState.Playing:
+    case GameState.Done:
+    case GameState.Abandoned:
+    case GameState.Replaced:
+    case GameState.Ignored:
     {
       return true;
     }

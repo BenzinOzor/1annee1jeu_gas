@@ -3,12 +3,15 @@ const HOME_SHEET_NAME = "🏠 Accueil";
 
 const DEFAULT_ROW_HEIGHT = 21;
 
-const GAME_STATE_NOT_STARTED = "Pas commencé";
-const GAME_STATE_PLAYING = "En cours";
-const GAME_STATE_DONE = "Terminé";
-const GAME_STATE_ABANDONED = "Abandonné";
-const GAME_STATE_REPLACED = "Remplacé";
-const GAME_STATE_IGNORED = "Ignoré";
+const GameState = 
+{
+    NotStarted: 'Pas commencé',
+    Playing: 'En cours',
+    Done: 'Terminé',
+    Abandoned: 'Abandonné',
+    Replaced: 'Remplacé',
+    Ignored: 'Ignoré'
+}
 
 const MODEL_STATE_COL_NAME = "Complétion";
 const MODEL_YEAR_COL_NAME = "Année";
