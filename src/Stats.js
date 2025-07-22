@@ -44,8 +44,11 @@ function compute_stats()
 
     let stats = new Stats;
 
-    stats.m_nb_finished_games = home_sheet.getRange( HOME_STATS_FINISHED_GAMES ).getValue();
-    stats.m_nb_games = home_sheet.getRange( HOME_STATS_NB_GAMES ).getValue();
+    let found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_FINISHED_GAMES );
+    stats.m_nb_finished_games = home_sheet.getRange( found_range.getRow(), found_range.getColumn() + 2 ).getValue();
+
+    found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_NB_GAMES );
+    stats.m_nb_games = home_sheet.getRange( found_range.getRow(), found_range.getColumn() + 2 ).getValue();
 
     Logger.log( "Collecting stats of all sheets..." );
     Logger.log( "Values from sheet: %d finished games out of %d", stats.m_nb_finished_games, stats.m_nb_games );
@@ -136,8 +139,10 @@ function handle_stats( _stats )
 */
 function fill_platfroms_stats( _sheet, _stats )
 {
-    let platform_row = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getRow();
-    const platform_name_col = _sheet.getRange( HOME_STATS_PLATFORM_CELL ).getColumn();
+    const platforms_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_PLATFORMS );
+    
+    let platform_row = platforms_range.getRow() + 1;
+    const platform_name_col = platforms_range.getColumn();
     const platform_number_col = platform_name_col + 1;
     
     _stats.m_platforms.forEach( function( _platform )
@@ -163,8 +168,10 @@ function fill_platfroms_stats( _sheet, _stats )
 */
 function fill_families_stats( _sheet, _stats )
 {
-    let family_row = _sheet.getRange( HOME_STATS_FAMILY_CELL ).getRow();
-    const family_name_col = _sheet.getRange( HOME_STATS_FAMILY_CELL ).getColumn();
+    const families_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_FAMILIES );
+
+    let family_row = families_range.getRow() + 1;
+    const family_name_col = families_range.getColumn();
     const family_count_col = family_name_col + 1;
     
     _stats.m_families_counts.forEach( function( _value, _key, _map )
@@ -191,8 +198,10 @@ function fill_families_stats( _sheet, _stats )
 */
 function fill_versions_stats( _sheet, _stats )
 {
-    let version_row = _sheet.getRange( HOME_STATS_VERSION_CELL ).getRow();
-    const version_name_col = _sheet.getRange( HOME_STATS_VERSION_CELL ).getColumn();
+    const version_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_VERSIONS );
+
+    let version_row = version_range.getRow() + 1;
+    const version_name_col = version_range.getColumn();
     const version_number_col = version_name_col + 1;
     
     _stats.m_versions.forEach( function( _version )
@@ -276,14 +285,14 @@ function collect_sheet_stats( _sheet, _stats )
                 let new_version = new Version;
                 new_version.m_version = range_data[ data_row ][ version_col_index ];
                 let colors = get_version_colors( new_version.m_version );
-            
+
                 new_version.m_background_color = colors.m_background_color;
                 new_version.m_foreground_color = colors.m_foreground_color;
-            
+
                 new_version.m_count = 1;
                 _stats.m_versions.push( new_version );
             }
-        
+
             version = _stats.m_versions.find( Version => Version.m_version === range_data[ data_row ][ version_col_index ] );
             Logger.log( "       %s - %d", version.m_version, version.m_count );
         }

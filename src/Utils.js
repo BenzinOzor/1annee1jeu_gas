@@ -272,3 +272,26 @@ function get_family_infos( _platform )
 
     return platform;
 }
+
+/* **********************************************************
+*  Look for the given text in a range
+*  Return the range in which the text has been found
+*/
+function find_text_in_range( _sheet, _range, _text )
+{
+  const values = _range.getValues();
+
+  const nb_rows = _range.getNumRows();
+  const nb_cols = _range.getNumColumns();
+
+  for( let row = 0; row < nb_rows; ++row )
+  {
+    for( let col = 0; col < nb_cols; ++col )
+    {
+      if( values[ row ][ col ] == _text )
+        return _sheet.getRange( _range.getRow() + row, _range.getColumn() + col );
+    }
+  }
+
+  return _range;
+}

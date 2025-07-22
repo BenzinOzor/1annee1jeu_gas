@@ -37,13 +37,16 @@ const HOME_PROGRESSION_BAR_COL = 5; // E
 const HOME_CURRENT_GAME_COL = 6;    // F
 
 // STATS
-const HOME_STATS_FIRST_COL = 8;     // H
-const HOME_STATS_FIRST_ROW = 34;
-const HOME_STATS_FINISHED_GAMES = "J31";
-const HOME_STATS_NB_GAMES = "N31";
-const HOME_STATS_PLATFORM_CELL = "H35";
-const HOME_STATS_FAMILY_CELL = "K35";
-const HOME_STATS_VERSION_CELL = "N35";
+const HOME_STATS_RANGE = "H26:P95";
+const HOME_STATS_WIDTH = 9;
+const HOME_STATS_HEIGHT = 69;
+
+const HOME_STATS_FINISHED_GAMES = "Jeux terminés";
+const HOME_STATS_NB_GAMES = "Nombre total de jeux";
+const HOME_STATS_PLATFORMS = "Plateformes";
+const HOME_STATS_TOP_PLATFORMS = "Top 5 Plateformes";
+const HOME_STATS_FAMILIES = "Familles";
+const HOME_STATS_VERSIONS = "Versions";
 
 const Family =
 {
