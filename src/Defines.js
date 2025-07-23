@@ -13,18 +13,21 @@ const GameState =
     Ignored: 'Ignoré'
 }
 
-const MODEL_STATE_COL_NAME = "Complétion";
-const MODEL_YEAR_COL_NAME = "Année";
-const MODEL_GAME_COL_NAME = "Jeu";
-const MODEL_GENRE_COL_NAME = "Genre";
-const MODEL_PLATFORM_COL_NAME = "Plateforme";
-const MODEL_VERSION_COL_NAME = "Version";
-const MODEL_ESTIMATE_COL_NAME = "Estimation";
-const MODEL_PLAYED_COL_NAME = "Temps Passé";
-const MODEL_DELTA_COL_NAME = "Différence";
-const MODEL_RATING_COL_NAME = "Note";
-const MODEL_COMMENT_COL_NAME = "Commentaire";
-const MODEL_VERDICT_COL_NAME = "Commentaire Pendant / Post Jeu";
+const ModelColumnName =
+{
+    State: 'Complétion',
+    Year: 'Année',
+    Game: 'Jeu',
+    Genre: 'Genre',
+    Platfrom: 'Plateforme',
+    Version: 'Version',
+    Estimate: 'Estimation',
+    Played: 'Temps Passé',
+    Delta: 'Delta',
+    Rating: 'Note',
+    Comment: 'Commentaire',
+    Verdict: 'Commentaire Pendant / Post Jeu'
+}
 
 const MODEL_TABLE_HEADER_ROW = 6;
 const MODEL_TABLE_FIRST_ROW = 7;

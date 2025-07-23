@@ -84,7 +84,7 @@ function finished_games_column( _home_sheet, _participant_sheet, _row )
 {
   Logger.log( "Filling finished games column..." );
   // First we find where the table begins.
-  const completion_header_row = get_header_row( _participant_sheet, "A:A", MODEL_STATE_COL_NAME );
+  const completion_header_row = get_header_row( _participant_sheet, "A:A", ModelColumnName.State );
   // Then we determine how many rows there are in the participant table.
   // We send completion_header_row + 1 because we want to give the first valid row after the header.
   const nb_rows = get_number_of_rows( _participant_sheet, completion_header_row + 1 );
@@ -218,8 +218,8 @@ function gather_participants()
 
   // Clearing old participants data from table first row to last row with data
   // It could mean that we clear more than necessary if there are more rows with data somewhere on the side but we don't plan to have anything under ther participants list so it doesn't really matter.
-  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear();  // This doesn't clear comments for some reason.
-
+  home_sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, home_sheet.getLastRow() - HOME_PARTICIPANTS_FIRST_ROW + 1, HOME_PARTICIPANTS_TABLE_WIDTH ).clear();
+  
   var row = HOME_PARTICIPANTS_FIRST_ROW;
   var sheets = ss.getSheets();
 

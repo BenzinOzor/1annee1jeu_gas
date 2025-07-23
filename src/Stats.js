@@ -229,17 +229,17 @@ function fill_versions_stats( _sheet, _stats )
 function collect_sheet_stats( _sheet, _stats )
 {
     Logger.log( "   Collecting stats for '%s'", _sheet.getName() );
-    const header_row = get_header_row( _sheet, "A:A", MODEL_STATE_COL_NAME );
+    const header_row = get_header_row( _sheet, "A:A", ModelColumnName.State );
     const nb_rows = get_number_of_rows( _sheet, header_row + 1 );
     const nb_cols = get_number_of_columns( _sheet );
 
     const sheet_range = _sheet.getRange( header_row + 1, 1, nb_rows, nb_cols );
     const range_data = sheet_range.getValues();
 
-    const state_col_index = get_column_data_index( _sheet, MODEL_STATE_COL_NAME, header_row );
-    const platform_col_index = get_column_data_index( _sheet, MODEL_PLATFORM_COL_NAME, header_row );
-    const game_col_index = get_column_data_index( _sheet, MODEL_GAME_COL_NAME, header_row );
-    const version_col_index = get_column_data_index( _sheet, MODEL_VERSION_COL_NAME, header_row );
+    const state_col_index = get_column_data_index( _sheet, ModelColumnName.State, header_row );
+    const platform_col_index = get_column_data_index( _sheet, ModelColumnName.Platfrom, header_row );
+    const game_col_index = get_column_data_index( _sheet, ModelColumnName.Game, header_row );
+    const version_col_index = get_column_data_index( _sheet, ModelColumnName.Version, header_row );
 
     let treated_games = 0;
 

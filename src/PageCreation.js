@@ -93,11 +93,11 @@ function remove_unwanted_columns( _sheet, _params )
 {
   Logger.log( "Removing unwanted columns..." );
 
-  remove_column( _sheet, _params.estimate == false && _params.delta == false, MODEL_ESTIMATE_COL_NAME );
-  remove_column( _sheet, _params.played == false && _params.delta == false, MODEL_PLAYED_COL_NAME );
-  remove_column( _sheet, _params.delta == false, MODEL_DELTA_COL_NAME );
-  remove_column( _sheet, _params.rating == false, MODEL_RATING_COL_NAME );
-  remove_column( _sheet, _params.verdict == false, MODEL_VERDICT_COL_NAME );
+  remove_column( _sheet, _params.estimate == false && _params.delta == false, ModelColumnName.Estimate );
+  remove_column( _sheet, _params.played == false && _params.delta == false, ModelColumnName.Played );
+  remove_column( _sheet, _params.delta == false, ModelColumnName.Delta );
+  remove_column( _sheet, _params.rating == false, ModelColumnName.Rating );
+  remove_column( _sheet, _params.verdict == false, ModelColumnName.Verdict );
 }
 
 /* **********************************************************
@@ -109,46 +109,50 @@ function add_columns( sheet, params )
 
   var column = MODEL_TABLE_VERSION_COL;
 
-  if( ( params.estimate || params.delta ) && does_column_exist( sheet, MODEL_ESTIMATE_COL_NAME ) == false )
+  if( ( params.estimate || params.delta ) && does_column_exist( sheet, ModelColumnName.Estimate ) == false )
   {
-    column = add_column( sheet, column, MODEL_ESTIMATE_COL_NAME );
+    column = add_column( sheet, column, ModelColumnName.Estimate );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Estimation du temps que prendra le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat( "[h]:mm:ss" );
 
-    Logger.log( "Added column: " + MODEL_ESTIMATE_COL_NAME );
+    Logger.log( "Added column: " + ModelColumnName.Estimate );
   }
-  if( ( params.played || params.delta ) && does_column_exist( sheet, MODEL_PLAYED_COL_NAME ) == false )
+
+  if( ( params.played || params.delta ) && does_column_exist( sheet, ModelColumnName.Played ) == false )
   {
-    column = add_column( sheet, column, MODEL_PLAYED_COL_NAME );
+    column = add_column( sheet, column, ModelColumnName.Played );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Temps passé sur le jeu, format hh:mm:ss" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     
-    Logger.log( "Added column: " + MODEL_PLAYED_COL_NAME );
+    Logger.log( "Added column: " + ModelColumnName.Played );
   }
-  if( params.delta && does_column_exist( sheet, MODEL_DELTA_COL_NAME ) == false )
+
+  if( params.delta && does_column_exist( sheet, ModelColumnName.Delta ) == false )
   {
-    column = add_column( sheet, column, MODEL_DELTA_COL_NAME );
+    column = add_column( sheet, column, ModelColumnName.Delta );
     sheet.getRange( MODEL_TABLE_HEADER_ROW, column ).setNote( "Différence entre le temps passé et l'estimation, rempli automatiquement quand le jeu est terminé" );
     var new_range = sheet.getRange(MODEL_TABLE_FIRST_ROW, column );
     new_range.setNumberFormat("[h]:mm:ss");
     new_range.setValue( '=if(A' + MODEL_TABLE_FIRST_ROW + ' = "Terminé";if(isblank(H' + MODEL_TABLE_FIRST_ROW + ');;H' + MODEL_TABLE_FIRST_ROW + ' - G' + MODEL_TABLE_FIRST_ROW + ');)' );
 
-    Logger.log( "Added column: " + MODEL_DELTA_COL_NAME );
+    Logger.log( "Added column: " + ModelColumnName.Delta );
   }
-  if( params.rating && does_column_exist( sheet, MODEL_RATING_COL_NAME ) == false )
+
+  if( params.rating && does_column_exist( sheet, ModelColumnName.Rating ) == false )
   {
-    column = add_column( sheet, column, MODEL_RATING_COL_NAME );
+    column = add_column( sheet, column, ModelColumnName.Rating );
     
-    Logger.log( "Added column: " + MODEL_RATING_COL_NAME );
+    Logger.log( "Added column: " + ModelColumnName.Rating );
   }
-  if( params.verdict && does_column_exist( sheet, MODEL_VERDICT_COL_NAME ) == false )
+
+  if( params.verdict && does_column_exist( sheet, ModelColumnName.Verdict ) == false )
   {
     let commentary_col = get_column_index( sheet, "Commentaire" );
-    column = add_column( sheet, commentary_col + 1, MODEL_VERDICT_COL_NAME );
+    column = add_column( sheet, commentary_col + 1, ModelColumnName.Verdict );
     
-    Logger.log( "Added column: " + MODEL_VERDICT_COL_NAME );
+    Logger.log( "Added column: " + ModelColumnName.Verdict );
   }
 }
 

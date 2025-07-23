@@ -295,3 +295,23 @@ function find_text_in_range( _sheet, _range, _text )
 
   return _range;
 }
+
+/* **********************************************************
+*  Compare two strings containing durations and tell which is greater than the other
+*  Return 1 if _duration_1 is greater, 1 if _duration_2 is greater, or 0 if durations are equal
+*/
+function compare_durations( _duration_1, _duration_2 )
+{
+  const duration_1_Parts = _duration_1.split(":");
+  const duration_2_Parts = _duration_2.split(":");
+
+  for( let duration_part = 0; duration_part < duration_1_Parts.length && duration_part < duration_2_Parts.length; ++duration_part )
+  {
+    if( parseInt( duration_1_Parts[ duration_part ], 10 ) > parseInt( duration_2_Parts[ duration_part ], 10 ))
+      return 1;
+    else if( parseInt( duration_1_Parts[ duration_part ], 10 ) < parseInt( duration_2_Parts[ duration_part ], 10 ))
+      return -1;
+  }
+
+  return 0;
+}
