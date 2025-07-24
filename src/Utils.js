@@ -346,7 +346,7 @@ function add_durations( _duration_1, _duration_2 )
 	add_missing_units( duration_1_parts, result_duration );
 	add_missing_units( duration_2_parts, result_duration );
 
-	for ( let duration_part = result_duration.length - 1; duration_part >= 0; --duration_part )
+	for( let duration_part = result_duration.length - 1; duration_part >= 0; --duration_part )
 	{
 		let time_1 = parseInt( duration_1_parts[ duration_part ], 10 );
 		let time_2 = parseInt( duration_2_parts[ duration_part ], 10 );
