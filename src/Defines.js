@@ -3,30 +3,30 @@ const HOME_SHEET_NAME = "🏠 Accueil";
 
 const DEFAULT_ROW_HEIGHT = 21;
 
-const GameState = 
+const GameState =
 {
-    NotStarted: 'Pas commencé',
-    Playing: 'En cours',
-    Done: 'Terminé',
-    Abandoned: 'Abandonné',
-    Replaced: 'Remplacé',
-    Ignored: 'Ignoré'
+	NotStarted: 'Pas commencé',
+	Playing: 'En cours',
+	Done: 'Terminé',
+	Abandoned: 'Abandonné',
+	Replaced: 'Remplacé',
+	Ignored: 'Ignoré'
 }
 
 const ModelColumnName =
 {
-    State: 'Complétion',
-    Year: 'Année',
-    Game: 'Jeu',
-    Genre: 'Genre',
-    Platfrom: 'Plateforme',
-    Version: 'Version',
-    Estimate: 'Estimation',
-    Played: 'Temps Passé',
-    Delta: 'Delta',
-    Rating: 'Note',
-    Comment: 'Commentaire',
-    Verdict: 'Commentaire Pendant / Post Jeu'
+	State: 'Complétion',
+	Year: 'Année',
+	Game: 'Jeu',
+	Genre: 'Genre',
+	Platfrom: 'Plateforme',
+	Version: 'Version',
+	Estimate: 'Estimation',
+	Played: 'Temps Passé',
+	Delta: 'Delta',
+	Rating: 'Note',
+	Comment: 'Commentaire',
+	Verdict: 'Commentaire Pendant / Post Jeu'
 }
 
 const MODEL_TABLE_HEADER_ROW = 6;
@@ -54,55 +54,55 @@ const HOME_STATS_VERSIONS = "Versions";
 
 const Family =
 {
-    None: 'None',
-    PC: 'PC',
-    Sony: 'Sony',
-    Xbox: 'Xbox',
-    Nintendo: 'Nintendo',
-    Sega: 'Sega',
+	None: 'None',
+	PC: 'PC',
+	Sony: 'Sony',
+	Xbox: 'Xbox',
+	Nintendo: 'Nintendo',
+	Sega: 'Sega',
 }
 
-const PlatformName = 
+const PlatformName =
 {
-    None: 'None',
-    PC: 'PC',
-    PS1: 'PS1',
-    PS2: 'PS2',
-    PS3: 'PS3',
-    PS4: 'PS4',
-    PS5: 'PS5',
-    PSP: 'PSP',
-    Vita: 'Vita',
-    Xbox: 'Xbox',
-    Xbox360: 'X360',
-    XONE: 'XONE',
-    XboxSeries: 'Series X|S',
-    NES: 'NES',
-    SNES: 'SNES',
-    N64: 'N64',
-    GameCube: 'GameCube',
-    Wii: 'Wii',
-    WiiU: 'Wii U',
-    Switch: 'Switch',
-    Switch2: 'Switch 2',
-    GameBoy: 'Game Boy',
-    GameBoyColor: 'Game Boy Color',
-    GBA: 'GBA',
-    DS: 'DS',
-    ThreeDS: '3DS',
-    MasterSystem: 'Master System',
-    MegaDrive: 'Mega Drive',
-    GameGear: 'Game Gear',
-    MegaCD: 'Mega-CD',
-    Saturn: 'Saturn',
-    Dreamcast: 'Dreamcast',
-    NeoGeo: 'Neo-Geo'
+	None: 'None',
+	PC: 'PC',
+	PS1: 'PS1',
+	PS2: 'PS2',
+	PS3: 'PS3',
+	PS4: 'PS4',
+	PS5: 'PS5',
+	PSP: 'PSP',
+	Vita: 'Vita',
+	Xbox: 'Xbox',
+	Xbox360: 'X360',
+	XONE: 'XONE',
+	XboxSeries: 'Series X|S',
+	NES: 'NES',
+	SNES: 'SNES',
+	N64: 'N64',
+	GameCube: 'GameCube',
+	Wii: 'Wii',
+	WiiU: 'Wii U',
+	Switch: 'Switch',
+	Switch2: 'Switch 2',
+	GameBoy: 'Game Boy',
+	GameBoyColor: 'Game Boy Color',
+	GBA: 'GBA',
+	DS: 'DS',
+	ThreeDS: '3DS',
+	MasterSystem: 'Master System',
+	MegaDrive: 'Mega Drive',
+	GameGear: 'Game Gear',
+	MegaCD: 'Mega-CD',
+	Saturn: 'Saturn',
+	Dreamcast: 'Dreamcast',
+	NeoGeo: 'Neo-Geo'
 }
 
 const VersionName =
 {
-    Original: 'Original',
-    Remake: 'Remake',
-    Remaster: 'Remaster',
-    Emulation: 'Émulation'
+	Original: 'Original',
+	Remake: 'Remake',
+	Remaster: 'Remaster',
+	Emulation: 'Émulation'
 }
