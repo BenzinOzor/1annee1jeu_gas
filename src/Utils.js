@@ -315,3 +315,40 @@ function compare_durations( _duration_1, _duration_2 )
 
 	return 0;
 }
+
+function zero_pad( _number, _pad )
+{
+	return String( _number ).padStart( _pad, '0' );
+}
+
+/* **********************************************************
+*  Add the given duration strings
+*  Return addition result string
+*/
+function add_durations( _duration_1, _duration_2 )
+{
+	const duration_1_Parts = _duration_1.split( ":" );
+	const duration_2_Parts = _duration_2.split( ":" );
+
+	let result_duration = Array( 3 ).fill( 0 );
+
+	if ( duration_1_Parts.length == duration_2_Parts.length )
+	{
+		for ( let duration_part = duration_1_Parts.length - 1; duration_part >= 0; --duration_part )
+		{
+			let time_1 = parseInt( duration_1_Parts[ duration_part ], 10 );
+			let time_2 = parseInt( duration_2_Parts[ duration_part ], 10 );
+
+			result_duration[ duration_part ] += time_1 + time_2;
+			
+			// The addition exceed 60 meaning we went over a minut/hour and have to adapt the time
+			if( duration_part > 0 && result_duration[ duration_part ] >= 60 )
+			{
+				++result_duration[ duration_part - 1 ];
+				result_duration[ duration_part ] -= 60;
+			}
+		}
+	}
+
+	return zero_pad( result_duration[ 0 ], 2 ) + ':' + zero_pad( result_duration[ 1 ], 2 ) + ':' + zero_pad( result_duration[ 2 ], 2 );
+}
