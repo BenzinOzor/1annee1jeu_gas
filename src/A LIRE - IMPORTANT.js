@@ -12,14 +12,14 @@
 
 function test()
 {
-	let dur1 = Duration.from_string( "5:59:59" );
+	let dur1 = Duration.from_string( "5:00:00" );
 	let dur2 = Duration.from_string( "0:00:02" );
 	let dur3 = Duration.from_string( "-2:00:00" );
 	let dur4 = Duration.from_string( "-10:00:00" );
 
 	Logger.log( dur1.to_string() + " " + dur2.to_string() + " " + dur3.to_string() + " " + dur4.to_string() );
 
-	let dur5 = Duration.add( dur1, dur2 );
+	let dur5 = Duration.substract( dur1, dur2 );
 	Logger.log( "%s + %s = %s", dur1.to_string(), dur2.to_string(), dur5.to_string() );
 
 	dur5 = Duration.add( dur1, dur3 );

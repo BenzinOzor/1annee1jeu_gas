@@ -147,6 +147,18 @@ class Duration
 			result.m_hours = _duration_1.m_hours - _duration_2.m_hours;
 			result.m_minuts = _duration_1.m_minuts - _duration_2.m_minuts;
 			result.m_seconds = _duration_1.m_seconds - _duration_2.m_seconds;
+
+			if( result.m_seconds < 0 )
+			{
+				result.m_seconds += 60;
+				--result.m_minuts;
+			}
+
+			if( result.m_minuts < 0 )
+			{
+				result.m_minuts += 60;
+				--result.m_hours;
+			}
 		}
 
 		return result;
