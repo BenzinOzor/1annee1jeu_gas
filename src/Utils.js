@@ -327,26 +327,37 @@ function zero_pad( _number, _pad )
 */
 function add_durations( _duration_1, _duration_2 )
 {
-	const duration_1_Parts = _duration_1.split( ":" );
-	const duration_2_Parts = _duration_2.split( ":" );
+	const duration_1_parts = _duration_1.split( ":" );
+	const duration_2_parts = _duration_2.split( ":" );
 
 	let result_duration = Array( 3 ).fill( 0 );
 
-	if ( duration_1_Parts.length == duration_2_Parts.length )
+	// It's possible to have different length in the timing, one cell could be 10:35:10 and the other just 5:12, or both could be shorter.
+	// If units are missing, the biggests will be used and "00" will be added as much as necessary.
+	// 5:12 will become 5:12:00, 5 will become 5:00:00
+	let add_missing_units = ( _durations, _result ) => 
 	{
-		for ( let duration_part = duration_1_Parts.length - 1; duration_part >= 0; --duration_part )
-		{
-			let time_1 = parseInt( duration_1_Parts[ duration_part ], 10 );
-			let time_2 = parseInt( duration_2_Parts[ duration_part ], 10 );
+		const units_diff = result_duration.length - duration_1_parts.length;
 
-			result_duration[ duration_part ] += time_1 + time_2;
-			
-			// The addition exceed 60 meaning we went over a minut/hour and have to adapt the time
-			if( duration_part > 0 && result_duration[ duration_part ] >= 60 )
-			{
-				++result_duration[ duration_part - 1 ];
-				result_duration[ duration_part ] -= 60;
-			}
+		for( let unit = 0; unit < units_diff; ++ unit )
+			_durations.push( "00" );
+	};
+
+	add_missing_units( duration_1_parts, result_duration );
+	add_missing_units( duration_2_parts, result_duration );
+
+	for ( let duration_part = result_duration.length - 1; duration_part >= 0; --duration_part )
+	{
+		let time_1 = parseInt( duration_1_parts[ duration_part ], 10 );
+		let time_2 = parseInt( duration_2_parts[ duration_part ], 10 );
+
+		result_duration[ duration_part ] += time_1 + time_2;
+
+		// The addition exceed 60 meaning we went over a minut/hour and have to adapt the time
+		if ( duration_part > 0 && result_duration[ duration_part ] >= 60 )
+		{
+			++result_duration[ duration_part - 1 ];
+			result_duration[ duration_part ] -= 60;
 		}
 	}
 
