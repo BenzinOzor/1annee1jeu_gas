@@ -45,4 +45,11 @@ function test()
 
 	dur5 = Duration.substract( dur2, dur3 );
 	Logger.log( dur2 + ' + ' + dur3 + ' = ' + dur5  );
+
+	dur5 = dur1;
+	dur5.add( dur2 );
+	dur5.add( dur3 );
+	dur5.add( dur4 );
+	dur5.divide( 4 );
+	Logger.log( dur5 + '(' + dur5.m_total_seconds + ')' );
 }

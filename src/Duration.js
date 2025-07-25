@@ -104,4 +104,27 @@ class Duration
 		result.m_total_seconds = _duration_1.m_total_seconds - _duration_2.m_total_seconds;
 		return result;
 	}
+
+	/* **********************************************************
+	*  Divide duration by a given number
+	*/
+	divide( _number )
+	{
+		if( _number != 0 )
+			this.m_total_seconds = Math.round( this.m_total_seconds / _number );
+	}
+
+	/* **********************************************************
+	*  Divide the given duration by the given number
+	*  Return a new Duration object, result of the division
+	*/
+	static divide( _duration, _number )
+	{
+		let result = new Duration();
+
+		if( _number != 0 )
+			result.m_total_seconds = Math.round( _duration.m_total_seconds - _number );
+
+		return result;
+	}
 }
