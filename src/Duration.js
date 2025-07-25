@@ -179,9 +179,7 @@ class Duration
 			}
 
 			if( negatives_count == 2 )
-			{
 				result.m_negative = true;
-			}
 		}
 
 		return result;
@@ -207,9 +205,8 @@ class Duration
 
 		if( negatives_count == 1 )
 		{
-		}
-		else if( negatives_count == 2 )
-		{
+			result = Duration.add( Duration.from_duration( _duration_1, false ), Duration.from_duration( _duration_2, false ) );
+			result.m_negative = _duration_1.m_negative;
 		}
 		else
 		{
@@ -228,6 +225,9 @@ class Duration
 				result.m_minuts += 60;
 				--result.m_hours;
 			}
+
+			if( negatives_count == 2 )
+				result.m_negative = true;
 		}
 
 		return result;
