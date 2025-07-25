@@ -47,8 +47,8 @@ class Duration
 		let res_duration = new Duration();
 
 		res_duration.m_hours = _duration.m_hours;
-		res_duration.m_minuts = _duration.m_hours;
-		res_duration.m_seconds = _duration.m_hours;
+		res_duration.m_minuts = _duration.m_minuts;
+		res_duration.m_seconds = _duration.m_seconds;
 		res_duration.m_negative = _negative;
 
 		return res_duration;
@@ -57,8 +57,8 @@ class Duration
 	copy( _duration, _negative = _duration.m_negative )
 	{
 		this.m_hours = _duration.m_hours;
-		this.m_minuts = _duration.m_hours;
-		this.m_seconds = _duration.m_hours;
+		this.m_minuts = _duration.m_minuts;
+		this.m_seconds = _duration.m_seconds;
 		this.m_negative = _negative;
 	}
 
