@@ -23,7 +23,8 @@ class Duration
 		// -10:00:01 => -3600 + 1 => 35999 when it should be 36001.
 		this.m_total_seconds = Math.abs( hours ) * SECONDS_IN_HOUR + minutes * SECONDS_IN_MINUTE + seconds;
 
-		if( hours < 0 )
+		// checking the first character of the string for sign. if hours are 0, it won't be detected otherwise
+		if( _duration[ 0 ] == '-' )
 			this.m_total_seconds *= -1;
 	}
 
@@ -82,7 +83,9 @@ class Duration
 	static add( _duration_1, _duration_2 )
 	{
 		let result = new Duration();
+
 		result.m_total_seconds = _duration_1.m_total_seconds + _duration_2.m_total_seconds;
+		
 		return result;
 	}
 
@@ -101,7 +104,9 @@ class Duration
 	static substract( _duration_1, _duration_2 )
 	{
 		let result = new Duration();
+
 		result.m_total_seconds = _duration_1.m_total_seconds - _duration_2.m_total_seconds;
+
 		return result;
 	}
 

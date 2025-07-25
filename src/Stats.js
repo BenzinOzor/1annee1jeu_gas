@@ -72,6 +72,7 @@ function compute_stats()
 	fill_platfroms_stats( home_sheet, stats );
 	fill_families_stats( home_sheet, stats );
 	fill_versions_stats( home_sheet, stats );
+	fill_durations_stats( home_sheet, stats );
 }
 
 /* **********************************************************
@@ -228,6 +229,15 @@ function fill_versions_stats( _sheet, _stats )
 	} );
 }
 
+function fill_durations_stats( _sheet, _stats )
+{
+	_stats.m_total_estimate.divide( _stats.m_estimates_count );
+	_stats.m_total_played.divide( _stats.m_played_count );
+	_stats.m_total_delta.divide( _stats.m_deltas_count );
+
+	Logger.log( "avg est %s (%d) | played %s (%d) | delta %s (%d)", _stats.m_total_estimate.toString(), _stats.m_estimates_count, _stats.m_total_played.toString(), _stats.m_played_count, _stats.m_total_delta.toString(), _stats.m_deltas_count );
+}
+
 /* **********************************************************
 *  Retrieve stats from a given sheet and update the stat class
 */
@@ -239,7 +249,7 @@ function collect_sheet_stats( _sheet, _stats )
 	const nb_cols = get_number_of_columns( _sheet );
 
 	const sheet_range = _sheet.getRange( header_row + 1, 1, nb_rows, nb_cols );
-	const range_data = sheet_range.getValues();
+	const range_data = sheet_range.getDisplayValues();
 
 	let columns_indices = {
 		m_state: -1,
@@ -253,12 +263,34 @@ function collect_sheet_stats( _sheet, _stats )
 		m_delta: -1,
 		m_rating: -1
 	};
+
 	columns_indices.m_state 	= get_column_data_index( _sheet, ModelColumnName.State, header_row );
 	columns_indices.m_game 		= get_column_data_index( _sheet, ModelColumnName.Game, header_row );
 	columns_indices.m_platform 	= get_column_data_index( _sheet, ModelColumnName.Platfrom, header_row );
 	columns_indices.m_version 	= get_column_data_index( _sheet, ModelColumnName.Version, header_row );
+	columns_indices.m_estimate 	= get_column_data_index( _sheet, ModelColumnName.Estimate, header_row );
+	columns_indices.m_played 	= get_column_data_index( _sheet, ModelColumnName.Played, header_row );
+	columns_indices.m_delta 	= get_column_data_index( _sheet, ModelColumnName.Delta, header_row );
 
 	let treated_games = 0;
+
+	let prev_estimate = new Duration();
+	prev_estimate.m_total_seconds = _stats.m_total_estimate.m_total_seconds;
+
+	let prev_played = new Duration();
+	prev_played.m_total_seconds = _stats.m_total_played.m_total_seconds;
+
+	let prev_delta = new Duration();
+	prev_delta.m_total_seconds = _stats.m_total_delta.m_total_seconds;
+
+	// Current game durations for delta backup calculation.
+	let game_estimate = new Duration();
+	let game_played = new Duration();
+	let game_delta = new Duration();
+
+	const prev_estimate_count = _stats.m_estimates_count;
+	const prev_played_count = _stats.m_played_count;
+	const prev_deltas_count = _stats.m_deltas_count;
 
 	for ( data_row = 0; data_row < range_data.length; ++data_row )
 	{
@@ -275,11 +307,28 @@ function collect_sheet_stats( _sheet, _stats )
 
 		collect_platform( range_data, _stats, data_row, columns_indices );
 		collect_version( range_data, _stats, data_row, columns_indices );
+		collect_estimate( range_data, _stats, data_row, columns_indices, game_estimate );
+		collect_played( range_data, _stats, data_row, columns_indices, game_played );
+		collect_delta( range_data, _stats, data_row, columns_indices, game_estimate, game_played, game_delta );
 
 		++treated_games;
+
+		/*Logger.log( "		#%d - %s - %s - %s - %s est. %s / played %s / delta %s", treated_games, range_data[ data_row ][ columns_indices.m_state ], range_data[ data_row ][ columns_indices.m_game ],
+
+																		game_estimate.toString(), game_played.toString(), game_delta.toString() );*/
+
+		game_estimate.m_total_seconds = 0;
+		game_played.m_total_seconds = 0;
+		game_delta.m_total_seconds = 0;
 	}
 
-	Logger.log( "   %d treated games", treated_games );
+	Logger.log( "	%d treated games	/	%d estimates / %d played / %d deltas", treated_games, _stats.m_estimates_count - prev_estimate_count, _stats.m_played_count - prev_played_count, _stats.m_deltas_count - prev_deltas_count );
+
+	const sheet_estimate = Duration.substract( _stats.m_total_estimate, prev_estimate );
+	const sheet_played = Duration.substract( _stats.m_total_played, prev_played );
+	const sheet_delta = Duration.substract( _stats.m_total_delta, prev_delta );
+
+	Logger.log( "	Estimate: %s | Played: %s | Delta: %s", sheet_estimate.toString(), sheet_played.toString(), sheet_delta.toString() );
 }
 
 /* **********************************************************
@@ -335,4 +384,78 @@ function collect_version( _range_data, _stats, _data_row, _columns_indices )
 	}
 
 	version = _stats.m_versions.find( Version => Version.m_version === _range_data[ _data_row ][ _columns_indices.m_version ] );
+}
+
+/* **********************************************************
+*  Retrieve estimate informations for the current row
+*/
+function collect_estimate( _range_data, _stats, _data_row, _columns_indices, _game_estimate )
+{
+	if( _columns_indices.m_estimate < 0 )
+		return;
+
+	const estimate = new Duration( _range_data[ _data_row ][ _columns_indices.m_estimate ] );
+
+	if( isNaN( estimate.m_total_seconds ) || estimate.m_total_seconds == 0 )
+		return;
+
+	_stats.m_total_estimate.add( estimate );
+	++_stats.m_estimates_count;
+	_game_estimate.m_total_seconds = estimate.m_total_seconds;
+}
+
+/* **********************************************************
+*  Retrieve played informations for the current row
+*/
+function collect_played( _range_data, _stats, _data_row, _columns_indices, _game_played )
+{
+	if( _columns_indices.m_played < 0 )
+		return;
+
+	const played = new Duration( _range_data[ _data_row ][ _columns_indices.m_played ] );
+
+	if( isNaN( played.m_total_seconds ) || played.m_total_seconds == 0 )
+		return;
+
+	_stats.m_total_played.add( played );
+	++_stats.m_played_count;
+	_game_played.m_total_seconds = played.m_total_seconds;
+}
+
+/* **********************************************************
+*  Retrieve delta informations for the current row
+*/
+function collect_delta( _range_data, _stats, _data_row, _columns_indices, _game_estimate, _game_played, _game_delta )
+{
+	let delta = new Duration();
+
+	if( _columns_indices.m_delta > 0 )
+	{
+		delta = new Duration( _range_data[ _data_row ][ _columns_indices.m_delta ] );
+	}
+
+	// We can try to compute what is the delta for a game if we couldn't find the information on the sheet.
+	if( isNaN( delta.m_total_seconds ) || delta.m_total_seconds == 0 )
+	{
+		// Game need to be finished to have a valid delta.
+		if( _columns_indices.m_state >= 0 && _range_data[ _data_row ][ _columns_indices.m_state ] != GameState.Done )
+			return;
+
+		if( isNaN( _game_estimate.m_total_seconds ) || _game_estimate.m_total_seconds == 0 )
+			return;
+
+		if( isNaN( _game_played.m_total_seconds ) || _game_played.m_total_seconds == 0 )
+			return;
+
+		// We have both an estimate and a played durations, we can determine the delta.
+		delta = Duration.substract( _game_played, _game_estimate );
+	}
+
+	// If we still have an invalid delta, there is nothing to do, return.
+	if( isNaN( delta.m_total_seconds ) )
+		return;
+
+	_stats.m_total_delta.add( delta );
+	++_stats.m_deltas_count;
+	_game_delta.m_total_seconds = delta.m_total_seconds;
 }
