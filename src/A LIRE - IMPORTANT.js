@@ -12,22 +12,37 @@
 
 function test()
 {
-	let dur1 = Duration.from_string( "6:00:00" );
-	let dur2 = Duration.from_string( "0:00:02" );
-	let dur3 = Duration.from_string( "-2:00:00" );
-	let dur4 = Duration.from_string( "-10:00:00" );
+	let dur1 = new Duration( "2:00:59" );
+	let dur2 = new Duration( "5:00:10" );
+	let dur3 = new Duration( "0:00:25" );
+	let dur4 = new Duration( "-10:00:01" );
 
-	Logger.log( dur1.to_string() + " " + dur2.to_string() + " " + dur3.to_string() + " " + dur4.to_string() );
+	Logger.log( dur1 + " / " + dur2 + " / " + dur3 + " / " + dur4 );
 
-	let dur5 = Duration.substract( dur1, dur2 );
-	Logger.log( "%s + %s = %s", dur1.to_string(), dur2.to_string(), dur5.to_string() );
+	let dur5 = Duration.add( dur1, dur2 );
+	Logger.log( dur1 + ' - ' + dur2 + ' = ' + dur5 );
 
 	dur5 = Duration.add( dur1, dur3 );
-	Logger.log( "%s + %s = %s", dur1.to_string(), dur3.to_string(), dur5.to_string() );
+	Logger.log( dur1 + ' + ' + dur3 + ' = ' + dur5  );
 
 	dur5 = Duration.add( dur1, dur4 );
-	Logger.log( "%s + %s = %s", dur1.to_string(), dur4.to_string(), dur5.to_string() );
+	Logger.log( dur1 + ' + ' + dur4 + ' = ' + dur5  );
 
 	dur5 = Duration.add( dur3, dur4 );
-	Logger.log( "%s + %s = %s", dur3.to_string(), dur4.to_string(), dur5.to_string() );
+	Logger.log( dur3 + ' + ' + dur4 + ' = ' + dur5  );
+
+	dur5 = Duration.substract( dur1, dur2 );
+	Logger.log( dur1 + ' - ' + dur2 + ' = ' + dur5 );
+
+	dur5 = Duration.substract( dur1, dur3 );
+	Logger.log( dur1 + ' + ' + dur3 + ' = ' + dur5  );
+
+	dur5 = Duration.substract( dur1, dur4 );
+	Logger.log( dur1 + ' + ' + dur4 + ' = ' + dur5  );
+
+	dur5 = Duration.substract( dur3, dur4 );
+	Logger.log( dur3 + ' + ' + dur4 + ' = ' + dur5  );
+
+	dur5 = Duration.substract( dur2, dur3 );
+	Logger.log( dur2 + ' + ' + dur3 + ' = ' + dur5  );
 }
