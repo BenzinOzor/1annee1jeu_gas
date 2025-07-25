@@ -160,9 +160,6 @@ class Duration
 			else
 				result = Duration.from_string( "00:00:00" );
 		}
-		else if( negatives_count == 2 )
-		{
-		}
 		else
 		{
 			result.m_seconds = _duration_1.m_seconds + _duration_2.m_seconds;
@@ -179,6 +176,11 @@ class Duration
 			{
 				result.m_minuts -= 60;
 				++result.m_hours;
+			}
+
+			if( negatives_count == 2 )
+			{
+				result.m_negative = true;
 			}
 		}
 
