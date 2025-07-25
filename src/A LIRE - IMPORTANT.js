@@ -12,7 +12,7 @@
 
 function test()
 {
-	let dur1 = Duration.from_string( "5:00:00" );
+	let dur1 = Duration.from_string( "6:00:00" );
 	let dur2 = Duration.from_string( "0:00:02" );
 	let dur3 = Duration.from_string( "-2:00:00" );
 	let dur4 = Duration.from_string( "-10:00:00" );

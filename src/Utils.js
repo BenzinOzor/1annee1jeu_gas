@@ -296,70 +296,7 @@ function find_text_in_range( _sheet, _range, _text )
 	return _range;
 }
 
-/* **********************************************************
-*  Compare two strings containing durations and tell which is greater than the other
-*  Return 1 if _duration_1 is greater, 1 if _duration_2 is greater, or 0 if durations are equal
-*/
-function compare_durations( _duration_1, _duration_2 )
-{
-	const duration_1_Parts = _duration_1.split( ":" );
-	const duration_2_Parts = _duration_2.split( ":" );
-
-	for ( let duration_part = 0; duration_part < duration_1_Parts.length && duration_part < duration_2_Parts.length; ++duration_part )
-	{
-		if ( parseInt( duration_1_Parts[ duration_part ], 10 ) > parseInt( duration_2_Parts[ duration_part ], 10 ) )
-			return 1;
-		else if ( parseInt( duration_1_Parts[ duration_part ], 10 ) < parseInt( duration_2_Parts[ duration_part ], 10 ) )
-			return -1;
-	}
-
-	return 0;
-}
-
 function zero_pad( _number, _pad )
 {
 	return String( _number ).padStart( _pad, '0' );
-}
-
-/* **********************************************************
-*  Add the given duration strings
-*  Return addition result string
-*/
-function add_durations( _duration_1, _duration_2 )
-{
-	const duration_1_parts = _duration_1.split( ":" );
-	const duration_2_parts = _duration_2.split( ":" );
-
-	let result_duration = Array( 3 ).fill( 0 );
-
-	// It's possible to have different length in the timing, one cell could be 10:35:10 and the other just 5:12, or both could be shorter.
-	// If units are missing, the biggests will be used and "00" will be added as much as necessary.
-	// 5:12 will become 5:12:00, 5 will become 5:00:00
-	let add_missing_units = ( _durations, _result ) => 
-	{
-		const units_diff = result_duration.length - duration_1_parts.length;
-
-		for( let unit = 0; unit < units_diff; ++ unit )
-			_durations.push( "00" );
-	};
-
-	add_missing_units( duration_1_parts, result_duration );
-	add_missing_units( duration_2_parts, result_duration );
-
-	for( let duration_part = result_duration.length - 1; duration_part >= 0; --duration_part )
-	{
-		let time_1 = parseInt( duration_1_parts[ duration_part ], 10 );
-		let time_2 = parseInt( duration_2_parts[ duration_part ], 10 );
-
-		result_duration[ duration_part ] += time_1 + time_2;
-
-		// The addition exceed 60 meaning we went over a minut/hour and have to adapt the time
-		if ( duration_part > 0 && result_duration[ duration_part ] >= 60 )
-		{
-			++result_duration[ duration_part - 1 ];
-			result_duration[ duration_part ] -= 60;
-		}
-	}
-
-	return zero_pad( result_duration[ 0 ], 2 ) + ':' + zero_pad( result_duration[ 1 ], 2 ) + ':' + zero_pad( result_duration[ 2 ], 2 );
 }
