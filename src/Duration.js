@@ -1,5 +1,7 @@
-const SECONDS_IN_HOUR = 3600;
 const SECONDS_IN_MINUTE = 60;
+const SECONDS_IN_HOUR = (60 * SECONDS_IN_MINUTE);
+const SECONDS_IN_DAY = (24 * SECONDS_IN_HOUR);
+const SECONDS_IN_YEAR = (365 * SECONDS_IN_DAY);
 
 class Duration
 {
@@ -36,7 +38,7 @@ class Duration
 		const abs_seconds = Math.abs( this.m_total_seconds );
 		// We have to use the absolute value of the seconds because the floor function won't go in the right direction in negative.
 		const hours = Math.floor( abs_seconds / SECONDS_IN_HOUR );
-		const minutes = Math.floor( (abs_seconds / SECONDS_IN_MINUTE) % SECONDS_IN_MINUTE );
+		const minutes = Math.floor( (abs_seconds % SECONDS_IN_HOUR) / SECONDS_IN_MINUTE );
 		const seconds = abs_seconds % SECONDS_IN_MINUTE;
 
 		return (this.m_total_seconds < 0 ? '-' : '') + zero_pad( hours, 1 ) + ':' + zero_pad( minutes, 2 ) + ':' + zero_pad( seconds, 2 );
@@ -142,7 +144,7 @@ class Duration
 		let result = new Duration();
 
 		if( _number != 0 )
-			result.m_total_seconds = Math.round( _duration.m_total_seconds - _number );
+			result.m_total_seconds = Math.round( _duration.m_total_seconds / _number );
 
 		return result;
 	}

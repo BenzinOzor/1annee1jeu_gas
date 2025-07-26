@@ -54,6 +54,19 @@ const HOME_STATS_TOP_PLATFORMS = "Top 5 Plateformes";
 const HOME_STATS_FAMILIES = "Familles";
 const HOME_STATS_VERSIONS = "Versions";
 
+const HomeStat = 
+{
+	EstimatedTime: 'Temps estimé',
+	PlayedTime: 'Temps passé',
+	AverageDelta: 'Delta moyen',
+	ShortestEstimate: 'Temps estimé le plus court',
+	LongestEstimate: 'Temps estimé le plus long',
+	ShortestPlayed: 'Temps passé le plus court',
+	LongestPlayed: 'Temps passé le plus long',
+	NegativeDelta: 'Plus grand delta négatif',
+	PositiveDelta: 'Plus grand delta positif'
+}
+
 const Family =
 {
 	None: 'None',

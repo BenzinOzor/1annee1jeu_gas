@@ -288,15 +288,141 @@ function fill_versions_stats( _sheet, _stats )
 	} );
 }
 
+function get_years_days_hours( _seconds )
+{
+	const years = Math.floor( _seconds / SECONDS_IN_YEAR );
+	const days = Math.floor( _seconds % SECONDS_IN_YEAR / SECONDS_IN_DAY );
+	const hours = Math.floor( _seconds % SECONDS_IN_DAY / SECONDS_IN_HOUR );
+
+	return { m_years: years, m_days: days, m_hours: hours };
+}
+
 function fill_durations_stats( _sheet, _stats )
 {
+	const average_estimate = Duration.divide( _stats.m_total_estimate, _stats.m_estimates_count );
+	const average_played = Duration.divide( _stats.m_total_played, _stats.m_played_count );
+	const average_delta = Duration.divide( _stats.m_total_delta, _stats.m_deltas_count );
+	
 	Logger.log( "total est %s (%d) | played %s (%d) | delta %s (%d)", _stats.m_total_estimate.toString(), _stats.m_estimates_count, _stats.m_total_played.toString(), _stats.m_played_count, _stats.m_total_delta.toString(), _stats.m_deltas_count );
+	Logger.log( "avg est %s | played %s | delta %s", average_estimate.toString(), average_played.toString(), average_delta.toString() );
 
-	_stats.m_total_estimate.divide( _stats.m_estimates_count );
-	_stats.m_total_played.divide( _stats.m_played_count );
-	_stats.m_total_delta.divide( _stats.m_deltas_count );
+	Logger.log( "Shortest estimate: %s - %s", 								_stats.m_shortest_estimate.m_estimate.toString(), _stats.m_shortest_estimate.m_game );
+	Logger.log( "Longest estimate: %s - %s", 								_stats.m_longest_estimate.m_estimate.toString(), _stats.m_longest_estimate.m_game );
+	Logger.log( "Shortest played: %s - %s", 								_stats.m_shortest_played.m_played.toString(), _stats.m_shortest_played.m_game );
+	Logger.log( "Longest played: %s - %s", 									_stats.m_longest_played.m_played.toString(), _stats.m_longest_played.m_game );
+	Logger.log( "Biggest negative delta: %s - %s - Est. %s - Played %s", 	_stats.m_biggest_negative_delta.m_delta.toString(), _stats.m_biggest_negative_delta.m_game, _stats.m_biggest_negative_delta.m_estimate.toString(), _stats.m_biggest_negative_delta.m_played.toString() );
+	Logger.log( "Biggest positive delta: %s - %s - Est. %s - Played %s", 	_stats.m_biggest_positive_delta.m_delta.toString(), _stats.m_biggest_positive_delta.m_game, _stats.m_biggest_positive_delta.m_estimate.toString(), _stats.m_biggest_positive_delta.m_played.toString() );
 
-	Logger.log( "avg est %s | played %s | delta %s", _stats.m_total_estimate.toString(), _stats.m_total_played.toString(), _stats.m_total_delta.toString() );
+	const home_stats_range = _sheet.getRange( HOME_STATS_RANGE );
+	let duration_range = find_text_in_range( _sheet, home_stats_range, HomeStat.EstimatedTime );
+
+	if( duration_range != home_stats_range )
+	{
+		let duration_row = duration_range.getRow();
+		let duration_col = duration_range.getColumn() + 2;
+		
+		_sheet.getRange( duration_row, duration_col ).setValue( average_estimate.toString() );
+		_sheet.getRange( duration_row + 1, duration_col ).setValue( average_played.toString() );
+		_sheet.getRange( duration_row + 2, duration_col ).setValue( average_delta.toString() );
+
+		duration_col += 2;
+		_sheet.getRange( duration_row, duration_col ).setValue( _stats.m_total_estimate.toString() );
+		_sheet.getRange( duration_row + 1, duration_col ).setValue( _stats.m_total_played.toString() );
+
+		++duration_col;
+		let durations = get_years_days_hours( _stats.m_total_estimate.m_total_seconds );
+
+		if( durations.m_years > 0 )
+			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_years + 'an(s) ' + durations.m_days + 'j ' + durations.m_hours + 'h' );
+		else
+			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_days + 'j ' + durations.m_hours + 'h' );
+
+		++duration_row;
+		durations = get_years_days_hours( _stats.m_total_played.m_total_seconds );
+
+		if( durations.m_years > 0 )
+			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_years + 'an(s) ' + durations.m_days + 'j ' + durations.m_hours + 'h' );
+		else
+			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_days + 'j ' + durations.m_hours + 'h' );
+	}
+
+	duration_range = find_text_in_range( _sheet, home_stats_range, HomeStat.ShortestEstimate );
+
+	if( duration_range != home_stats_range )
+	{
+		let estimate_row = duration_range.getRow();
+		let estimate_col = duration_range.getColumn() + 2;
+
+		set_game_time_and_link( _sheet, estimate_row, estimate_col, _stats.m_shortest_estimate, DurationRecord.ShortestEstimate );
+
+		++estimate_row;
+
+		set_game_time_and_link( _sheet, estimate_row, estimate_col, _stats.m_longest_estimate, DurationRecord.LongestEstimate );
+	}
+
+	duration_range = find_text_in_range( _sheet, home_stats_range, HomeStat.ShortestPlayed );
+
+	if( duration_range != home_stats_range )
+	{
+		let played_row = duration_range.getRow();
+		let played_col = duration_range.getColumn() + 2;
+
+		set_game_time_and_link( _sheet, played_row, played_col, _stats.m_shortest_played, DurationRecord.ShortestPlayed );
+
+		++played_row;
+
+		set_game_time_and_link( _sheet, played_row, played_col, _stats.m_longest_played, DurationRecord.LongestPlayed );
+	}
+
+	duration_range = find_text_in_range( _sheet, home_stats_range, HomeStat.NegativeDelta );
+
+	if( duration_range != home_stats_range )
+		set_game_time_and_link( _sheet, duration_range.getRow(), duration_range.getColumn() + 2, _stats.m_biggest_negative_delta, DurationRecord.NegativeDelta );
+
+	duration_range = find_text_in_range( _sheet, home_stats_range, HomeStat.PositiveDelta );
+
+	if( duration_range != home_stats_range )
+		set_game_time_and_link( _sheet, duration_range.getRow(), duration_range.getColumn() + 2, _stats.m_biggest_positive_delta, DurationRecord.PositiveDelta );
+}
+
+function set_game_time_and_link( _sheet, _row, _col, _duration_infos, _record_type )
+{
+	let duration = new Duration();
+
+	switch( _record_type )
+	{
+		case DurationRecord.ShortestEstimate:
+		case DurationRecord.LongestEstimate:
+		{
+			duration = _duration_infos.m_estimate;
+			break;
+		}
+		case DurationRecord.ShortestPlayed:
+		case DurationRecord.LongestPlayed:
+		{
+			duration = _duration_infos.m_played;
+			break;
+		}
+		case DurationRecord.NegativeDelta:
+		case DurationRecord.PositiveDelta:
+		{
+			duration = _duration_infos.m_delta;
+
+			const home_stats_range = _sheet.getRange( HOME_STATS_RANGE )
+			_sheet.getRange( _row + 1, _col ).setValue( _duration_infos.m_estimate.toString() );
+			_sheet.getRange( _row + 1, home_stats_range.getLastColumn() ).setValue( _duration_infos.m_played.toString() );
+			break;
+		}
+	}
+
+	_sheet.getRange( _row, _col ).setValue( duration.toString() );
+		
+	const richText = SpreadsheetApp.newRichTextValue()
+	.setText( _duration_infos.m_game )
+	.setLinkUrl( _duration_infos.m_link )
+	.build();
+	
+	_sheet.getRange( _row, _col + 1 ).setRichTextValue( richText );
 }
 
 /* **********************************************************
@@ -533,7 +659,14 @@ function collect_delta( _range_data, _stats, _data_row, _columns_indices, _game_
 
 function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos, _record_type )
 {
-	let set_game_and_link = false;
+	const game_row = _range.getRow() + _data_row;
+
+	let set_game_and_link = ( _duration_infos ) =>
+	{
+		_duration_infos.m_game = _game_infos.m_game;
+		_duration_infos.m_link = '#gid=' + _sheet.getSheetId() + '#range=A' + game_row + ':' + get_column_letter( _range.getNumColumns() ) + game_row;
+	};
+
 	switch( _record_type )
 	{
 		case DurationRecord.ShortestEstimate:
@@ -544,7 +677,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 			if( _stats.m_shortest_estimate.m_estimate.compare( _game_infos.m_estimate ) > 0 )
 			{
 				_stats.m_shortest_estimate.m_estimate.copy( _game_infos.m_estimate );
-				set_game_and_link = true;
+				set_game_and_link( _stats.m_shortest_estimate );
 
 				Logger.log( "			New shortest estimate: %s - %s", _game_infos.m_estimate.toString(), _game_infos.m_game );
 			}
@@ -558,7 +691,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 			if( _stats.m_longest_estimate.m_estimate.compare( _game_infos.m_estimate ) < 0 )
 			{
 				_stats.m_longest_estimate.m_estimate.copy( _game_infos.m_estimate );
-				set_game_and_link = true;
+				set_game_and_link( _stats.m_longest_estimate );
 
 				Logger.log( "			New longest estimate: %s - %s", _game_infos.m_estimate.toString(), _game_infos.m_game );
 			}
@@ -572,7 +705,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 			if( _stats.m_shortest_played.m_played.compare( _game_infos.m_played ) > 0 )
 			{
 				_stats.m_shortest_played.m_played.copy( _game_infos.m_played );
-				set_game_and_link = true;
+				set_game_and_link( _stats.m_shortest_played );
 
 				Logger.log( "			New shortest played: %s - %s", _game_infos.m_played.toString(), _game_infos.m_game );
 			}
@@ -586,7 +719,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 			if( _stats.m_longest_played.m_played.compare( _game_infos.m_played ) < 0 )
 			{
 				_stats.m_longest_played.m_played.copy( _game_infos.m_played );
-				set_game_and_link = true;
+				set_game_and_link( _stats.m_longest_played );
 
 				Logger.log( "			New longest played: %s - %s", _game_infos.m_played.toString(), _game_infos.m_game );
 			}
@@ -600,9 +733,9 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 			if( _game_infos.m_delta.m_total_seconds < 0 && _stats.m_biggest_negative_delta.m_delta.compare( _game_infos.m_delta ) > 0 )
 			{
 				_stats.m_biggest_negative_delta.m_delta.copy( _game_infos.m_delta );
-				_stats.m_biggest_positive_delta.m_estimate = _game_infos.m_estimate;
-				_stats.m_biggest_positive_delta.m_played = _game_infos.m_played;
-				set_game_and_link = true;
+				_stats.m_biggest_negative_delta.m_estimate = _game_infos.m_estimate;
+				_stats.m_biggest_negative_delta.m_played = _game_infos.m_played;
+				set_game_and_link( _stats.m_biggest_negative_delta );
 
 				Logger.log( "			New biggest negative delta: %s - %s / Est. %s - Played %s", _game_infos.m_delta.toString(), _game_infos.m_game, _game_infos.m_estimate.toString(), _game_infos.m_played.toString() );
 			}
@@ -618,16 +751,11 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 				_stats.m_biggest_positive_delta.m_delta.copy( _game_infos.m_delta );
 				_stats.m_biggest_positive_delta.m_estimate = _game_infos.m_estimate;
 				_stats.m_biggest_positive_delta.m_played = _game_infos.m_played;
-				set_game_and_link = true;
+				set_game_and_link( _stats.m_biggest_positive_delta );
 
 				Logger.log( "			New biggest positive delta: %s - %s / Est. %s - Played %s", _game_infos.m_delta.toString(), _game_infos.m_game, _game_infos.m_estimate.toString(), _game_infos.m_played.toString() );
 			}
 			break;
 		}
 	}
-
-	const game_row = _range.getRow() + _data_row;
-
-	_stats.m_shortest_estimate.m_game = _game_infos.m_game;
-	_stats.m_shortest_estimate.m_link = '#gid=' + _sheet.getSheetId() + '#range=A' + game_row + get_column_letter( _range.getNumColumns() ) + game_row;
 }
