@@ -17,39 +17,5 @@ function test()
 	let dur3 = new Duration( "0:00:25" );
 	let dur4 = new Duration( "-10:00:01" );
 
-	Logger.log( dur1 + " / " + dur2 + " / " + dur3 + " / " + dur4 );
-
-	let dur5 = Duration.add( dur1, dur2 );
-	Logger.log( dur1 + ' - ' + dur2 + ' = ' + dur5 );
-
-	dur5 = Duration.add( dur1, dur3 );
-	Logger.log( dur1 + ' + ' + dur3 + ' = ' + dur5  );
-
-	dur5 = Duration.add( dur1, dur4 );
-	Logger.log( dur1 + ' + ' + dur4 + ' = ' + dur5  );
-
-	dur5 = Duration.add( dur3, dur4 );
-	Logger.log( dur3 + ' + ' + dur4 + ' = ' + dur5  );
-
-	dur5 = Duration.substract( dur1, dur2 );
-	Logger.log( dur1 + ' - ' + dur2 + ' = ' + dur5 );
-
-	dur5 = Duration.substract( dur1, dur3 );
-	Logger.log( dur1 + ' + ' + dur3 + ' = ' + dur5  );
-
-	dur5 = Duration.substract( dur1, dur4 );
-	Logger.log( dur1 + ' + ' + dur4 + ' = ' + dur5  );
-
-	dur5 = Duration.substract( dur3, dur4 );
-	Logger.log( dur3 + ' + ' + dur4 + ' = ' + dur5  );
-
-	dur5 = Duration.substract( dur2, dur3 );
-	Logger.log( dur2 + ' + ' + dur3 + ' = ' + dur5  );
-
-	dur5 = dur1;
-	dur5.add( dur2 );
-	dur5.add( dur3 );
-	dur5.add( dur4 );
-	dur5.divide( 4 );
-	Logger.log( dur5 + '(' + dur5.m_total_seconds + ')' );
+	Logger.log( Duration.compare( dur1, dur2 ) + ' ' + Duration.compare( dur2, dur3 ) + ' ' + Duration.compare( dur2, dur4, true ) + ' ' + Duration.compare( dur4, dur4 ) );
 }

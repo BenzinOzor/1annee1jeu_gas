@@ -44,7 +44,7 @@ class Duration
 
 	/* **********************************************************
 	*  Compare two strings containing durations and tell which is greater than the other
-	*  Return 1 if _duration_1 is greater, 1 if _duration_2 is greater, or 0 if durations are equal
+	*  Return 1 if _duration is smaller, -1 if _duration is greater, or 0 if durations are equal
 	*/
 	compare( _duration, _absolute = false )
 	{
@@ -59,13 +59,27 @@ class Duration
 	{
 		if( _absolute )
 		{
-			const abs_1 = Math.abs( _duration_1 );
-			const abs_2 = Math.abs( _duration_2 );
+			const abs_1 = Math.abs( _duration_1.m_total_seconds );
+			const abs_2 = Math.abs( _duration_2.m_total_seconds );
 
 			return abs_1 > abs_2 ? 1 : (abs_1 < abs_2 ? -1 : 0);
 		}
 
-		return _duration_1 > _duration_2 ? 1 : (_duration_1 < _duration_2 ? -1 : 0);
+		return _duration_1.m_total_seconds > _duration_2.m_total_seconds ? 1 : (_duration_1.m_total_seconds < _duration_2.m_total_seconds ? -1 : 0);
+	}
+
+	copy( _duration )
+	{
+		this.m_total_seconds = _duration.m_total_seconds;
+	}
+
+	static copy( _duration )
+	{
+		let result = new Duration();
+
+		result.m_total_seconds = _duration.m_total_seconds;
+		
+		return result;
 	}
 
 	/* **********************************************************

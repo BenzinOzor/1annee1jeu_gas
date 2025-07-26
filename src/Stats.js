@@ -1,3 +1,13 @@
+const DurationRecord =
+{
+	ShortestEstimate: 0,
+	LongestEstimate: 1,
+	ShortestPlayed: 2,
+	LongestPlayed: 3,
+	NegativeDelta: 4,
+	PositiveDelta: 5,
+}
+
 class Platform
 {
 	constructor()
@@ -21,6 +31,20 @@ class Version
 	}
 }
 
+// Class used for longest and shortest durations among parsed sheets
+class DurationInfos
+{
+	constructor()
+	{
+		// The threed durations can be used if we keep delta informations. Corresponding estimate and played will be displayed aswell.
+		this.m_estimate = new Duration();
+		this.m_played = new Duration();
+		this.m_delta = new Duration();
+		this.m_link = "";				// #gid=<sheet_id>#range=<game_row>
+		this.m_game = "";
+	}
+}
+
 class Stats
 {
 	constructor()
@@ -36,6 +60,17 @@ class Stats
 		this.m_estimates_count = 0;				// Counts can vary from the total number of games, people might not have the column setup for example, so we have to count them separately.
 		this.m_played_count = 0;
 		this.m_deltas_count = 0;
+
+		this.m_shortest_estimate = new DurationInfos();
+		this.m_shortest_estimate.m_estimate.m_total_seconds = MAX_DURATION_SECONDS;
+		this.m_longest_estimate = new DurationInfos();
+
+		this.m_shortest_played = new DurationInfos();
+		this.m_shortest_played.m_played.m_total_seconds = MAX_DURATION_SECONDS;
+		this.m_longest_played = new DurationInfos();
+
+		this.m_biggest_negative_delta = new DurationInfos();
+		this.m_biggest_positive_delta = new DurationInfos();
 	}
 }
 
@@ -50,6 +85,7 @@ class GameInfos
 		this.m_platform_count = 0;
 		this.m_version = "";
 		this.m_version_count = 0;
+		
 		this.m_estimate = new Duration();
 		this.m_played = new Duration();
 		this.m_delta = new Duration();
@@ -299,14 +335,9 @@ function collect_sheet_stats( _sheet, _stats )
 
 	let treated_games = 0;
 
-	let prev_estimate = new Duration();
-	prev_estimate.m_total_seconds = _stats.m_total_estimate.m_total_seconds;
-
-	let prev_played = new Duration();
-	prev_played.m_total_seconds = _stats.m_total_played.m_total_seconds;
-
-	let prev_delta = new Duration();
-	prev_delta.m_total_seconds = _stats.m_total_delta.m_total_seconds;
+	let prev_estimate = Duration.copy( _stats.m_total_estimate );
+	let prev_played = Duration.copy( _stats.m_total_played );
+	let prev_delta = Duration.copy( _stats.m_total_delta );
 
 	// Current game durations for delta backup calculation.
 	let game_infos = new GameInfos();
@@ -337,12 +368,16 @@ function collect_sheet_stats( _sheet, _stats )
 		collect_played( range_data, _stats, data_row, columns_indices, game_infos );
 		collect_delta( range_data, _stats, data_row, columns_indices, game_infos );
 
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.ShortestEstimate );
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.LongestEstimate );
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.ShortestPlayed );
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.LongestPlayed );
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.NegativeDelta );
+		collect_duration_record( _sheet, _stats, sheet_range, data_row, game_infos, DurationRecord.PositiveDelta );
+
 		++treated_games;
 		game_infos.m_number = treated_games;
 
-		/*Logger.log( "		#%d - %s - %s - %s - %s est. %s / played %s / delta %s", treated_games, range_data[ data_row ][ columns_indices.m_state ], range_data[ data_row ][ columns_indices.m_game ],
-
-																		game_estimate.toString(), game_played.toString(), game_delta.toString() );*/
 		Logger.log( '		' + game_infos );
 
 		game_infos = new GameInfos();
@@ -437,7 +472,7 @@ function collect_estimate( _range_data, _stats, _data_row, _columns_indices, _ga
 
 	_stats.m_total_estimate.add( estimate );
 	++_stats.m_estimates_count;
-	_game_infos.m_estimate.m_total_seconds = estimate.m_total_seconds;
+	_game_infos.m_estimate.copy( estimate );
 }
 
 /* **********************************************************
@@ -494,4 +529,105 @@ function collect_delta( _range_data, _stats, _data_row, _columns_indices, _game_
 	_stats.m_total_delta.add( delta );
 	++_stats.m_deltas_count;
 	_game_infos.m_delta.m_total_seconds = delta.m_total_seconds;
+}
+
+function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos, _record_type )
+{
+	let set_game_and_link = false;
+	switch( _record_type )
+	{
+		case DurationRecord.ShortestEstimate:
+		{
+			if( isNaN( _game_infos.m_estimate.m_total_seconds ) || _game_infos.m_estimate.m_total_seconds == 0 )
+				return;
+
+			if( _stats.m_shortest_estimate.m_estimate.compare( _game_infos.m_estimate ) > 0 )
+			{
+				_stats.m_shortest_estimate.m_estimate.copy( _game_infos.m_estimate );
+				set_game_and_link = true;
+
+				Logger.log( "			New shortest estimate: %s - %s", _game_infos.m_estimate.toString(), _game_infos.m_game );
+			}
+			break;
+		}
+		case DurationRecord.LongestEstimate:
+		{
+			if( isNaN( _game_infos.m_estimate.m_total_seconds ) || _game_infos.m_estimate.m_total_seconds == 0 )
+				return;
+
+			if( _stats.m_longest_estimate.m_estimate.compare( _game_infos.m_estimate ) < 0 )
+			{
+				_stats.m_longest_estimate.m_estimate.copy( _game_infos.m_estimate );
+				set_game_and_link = true;
+
+				Logger.log( "			New longest estimate: %s - %s", _game_infos.m_estimate.toString(), _game_infos.m_game );
+			}
+			break;
+		}
+		case DurationRecord.ShortestPlayed:
+		{
+			if( isNaN( _game_infos.m_played.m_total_seconds ) || _game_infos.m_played.m_total_seconds == 0 )
+				return;
+
+			if( _stats.m_shortest_played.m_played.compare( _game_infos.m_played ) > 0 )
+			{
+				_stats.m_shortest_played.m_played.copy( _game_infos.m_played );
+				set_game_and_link = true;
+
+				Logger.log( "			New shortest played: %s - %s", _game_infos.m_played.toString(), _game_infos.m_game );
+			}
+			break;
+		}
+		case DurationRecord.LongestPlayed:
+		{
+			if( isNaN( _game_infos.m_played.m_total_seconds ) || _game_infos.m_played.m_total_seconds == 0 )
+				return;
+
+			if( _stats.m_longest_played.m_played.compare( _game_infos.m_played ) < 0 )
+			{
+				_stats.m_longest_played.m_played.copy( _game_infos.m_played );
+				set_game_and_link = true;
+
+				Logger.log( "			New longest played: %s - %s", _game_infos.m_played.toString(), _game_infos.m_game );
+			}
+			break;
+		}
+		case DurationRecord.NegativeDelta:
+		{
+			if( isNaN( _game_infos.m_delta.m_total_seconds ) || _game_infos.m_delta.m_total_seconds == 0 )
+				return;
+
+			if( _game_infos.m_delta.m_total_seconds < 0 && _stats.m_biggest_negative_delta.m_delta.compare( _game_infos.m_delta ) > 0 )
+			{
+				_stats.m_biggest_negative_delta.m_delta.copy( _game_infos.m_delta );
+				_stats.m_biggest_positive_delta.m_estimate = _game_infos.m_estimate;
+				_stats.m_biggest_positive_delta.m_played = _game_infos.m_played;
+				set_game_and_link = true;
+
+				Logger.log( "			New biggest negative delta: %s - %s / Est. %s - Played %s", _game_infos.m_delta.toString(), _game_infos.m_game, _game_infos.m_estimate.toString(), _game_infos.m_played.toString() );
+			}
+			break;
+		}
+		case DurationRecord.PositiveDelta:
+		{
+			if( isNaN( _game_infos.m_delta.m_total_seconds ) || _game_infos.m_delta.m_total_seconds == 0 )
+				return;
+
+			if( _game_infos.m_delta.m_total_seconds > 0 && _stats.m_biggest_positive_delta.m_delta.compare( _game_infos.m_delta ) < 0 )
+			{
+				_stats.m_biggest_positive_delta.m_delta.copy( _game_infos.m_delta );
+				_stats.m_biggest_positive_delta.m_estimate = _game_infos.m_estimate;
+				_stats.m_biggest_positive_delta.m_played = _game_infos.m_played;
+				set_game_and_link = true;
+
+				Logger.log( "			New biggest positive delta: %s - %s / Est. %s - Played %s", _game_infos.m_delta.toString(), _game_infos.m_game, _game_infos.m_estimate.toString(), _game_infos.m_played.toString() );
+			}
+			break;
+		}
+	}
+
+	const game_row = _range.getRow() + _data_row;
+
+	_stats.m_shortest_estimate.m_game = _game_infos.m_game;
+	_stats.m_shortest_estimate.m_link = '#gid=' + _sheet.getSheetId() + '#range=A' + game_row + get_column_letter( _range.getNumColumns() ) + game_row;
 }
