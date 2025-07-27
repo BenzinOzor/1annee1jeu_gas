@@ -17,6 +17,8 @@ class Platform
 		this.m_foreground_color = "#000000";
 		this.m_name = PlatformName.None;
 		this.m_count = 0;
+		this.m_decades = Array( Decade.Count );
+		this.m_decades.fill( 0 );
 	}
 }
 
@@ -28,6 +30,8 @@ class Version
 		this.m_background_color = "#ffffff";
 		this.m_foreground_color = "#000000";
 		this.m_count = 0;
+		this.m_decades = Array( Decade.Count );
+		this.m_decades.fill( 0 );
 	}
 }
 
@@ -50,6 +54,8 @@ class Stats
 	constructor()
 	{
 		this.m_nb_games = 0;
+		this.m_nb_games_by_decades = Array( Decade.Count );
+		this.m_nb_games_by_decades.fill( 0 );
 		this.m_nb_finished_games = 0;
 		this.m_versions = [];           // Array of Version
 		this.m_platforms = [];          // Array of Platform
@@ -81,9 +87,8 @@ class GameInfos
 		this.m_number = 0;
 		this.m_state = "";
 		this.m_game = "";
-		this.m_platform = "";
-		this.m_platform_count = 0;
-		this.m_version = "";
+		this.m_platform = new Platform();
+		this.m_version = new Version();
 		this.m_version_count = 0;
 		
 		this.m_estimate = new Duration();
@@ -93,7 +98,8 @@ class GameInfos
 
 	toString()
 	{
-		return '#'+ this.m_number +' - '+ this.m_game +' - '+ this.m_state +' - '+ this.m_platform +' ('+ this.m_platform_count +') '+ this.m_version +' ('+ this.m_version_count
+		return '#'+ this.m_number +' - '+ this.m_game +' - '+ this.m_state +' - '+ this.m_platform.m_name +' ('+ this.m_platform.m_count + ' - ' + this.m_platform.m_decades +') '
+		+ this.m_version.m_version +' ('+ this.m_version.m_count + ' - ' + this.m_version.m_decades
 		+') - est. '+ this.m_estimate +' - played '+ this.m_played +' - delta '+ this.m_delta;
 	}
 }
@@ -132,6 +138,11 @@ function compute_stats()
 	fill_families_stats( home_sheet, stats );
 	fill_versions_stats( home_sheet, stats );
 	fill_durations_stats( home_sheet, stats );
+
+	fill_decade_stats( home_sheet, stats, Decade.Nineties );
+	fill_decade_stats( home_sheet, stats, Decade.TwoKs );
+	fill_decade_stats( home_sheet, stats, Decade.TwoKTens );
+	fill_decade_stats( home_sheet, stats, Decade.TwoKTwneties );
 }
 
 /* **********************************************************
@@ -205,7 +216,7 @@ function handle_stats( _stats )
 */
 function fill_platfroms_stats( _sheet, _stats )
 {
-	const platforms_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_PLATFORMS );
+	const platforms_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HomeStat.Platforms );
 
 	let platform_row = platforms_range.getRow() + 1;
 	const platform_name_col = platforms_range.getColumn();
@@ -279,6 +290,163 @@ function fill_versions_stats( _sheet, _stats )
 			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
 		else
 			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_count + " (" + percentage.toFixed() + "%)" );
+
+		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
+		platform_range.setBackground( _version.m_background_color );
+		platform_range.setFontColor( _version.m_foreground_color );
+
+		++version_row;
+	} );
+}
+
+/* **********************************************************
+*  Fill the platforms, families and versions stats of a given decade
+*/
+function fill_decade_stats( _sheet, _stats, _decade )
+{
+	let get_decade_header = () =>
+	{
+		switch( _decade )
+		{
+			case Decade.Nineties:
+				return HomeStat.Decade90s;
+			case Decade.TwoKs:
+				return HomeStat.Decade2Ks;
+			case Decade.TwoKTens:
+				return HomeStat.Decade2K10s;
+			case Decade.TwoKTwneties:
+				return HomeStat.Decade2K20s;
+			default:
+				return HomeStat.Decade90s;
+		}
+	}
+
+	const decade_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), get_decade_header() );
+
+	if( decade_range == _sheet.getRange( HOME_STATS_RANGE ) )
+		return;
+
+	fill_platforms_decade( _sheet, _stats, decade_range, _decade );
+	fill_families_decade( _sheet, _stats, decade_range, _decade );
+	fill_versions_decade( _sheet, _stats, decade_range, _decade );
+}
+
+/* **********************************************************
+*  Fill the platform stats columns of the given decade
+*/
+function fill_platforms_decade( _sheet, _stats, _decade_range, _decade )
+{
+	const platforms_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.TopPlatforms );
+
+	if( platforms_range.getRow() == _decade_range.getRow() )
+		return;
+
+	_stats.m_platforms.sort( ( a, b ) => b.m_decades[ _decade ] - a.m_decades[ _decade ] );
+	const decade_platforms = _stats.m_platforms.slice( 0, 5 );
+
+	let platform_row = platforms_range.getRow() + 1;
+	const platform_name_col = platforms_range.getColumn();
+	const platform_number_col = platform_name_col + 1;
+
+	decade_platforms.forEach( function ( _platform )
+	{
+		let percentage = _platform.m_decades[ _decade ] / _stats.m_nb_games_by_decades[ _decade ] * 100;
+		
+		let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
+		
+		if ( _platform.m_decades[ _decade ] == 0 )
+		{
+			_sheet.getRange( platform_row, platform_name_col ).setValue( "-" );
+			_sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
+			platform_range.setBackground( HOME_STATS_EMPTY_CELL_BACKGROUND );
+			platform_range.setFontColor( HOME_STATS_EMPTY_CELL_FOREGROUND );
+		}
+		else
+		{
+			_sheet.getRange( platform_row, platform_name_col ).setValue( _platform.m_name );
+			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_decades[ _decade ] + " (" + percentage.toFixed() + "%)" );
+			platform_range.setBackground( _platform.m_background_color );
+			platform_range.setFontColor( _platform.m_foreground_color );
+		}
+
+		++platform_row;
+	} );
+}
+
+/* **********************************************************
+*  Fill the families stats columns of the given decade
+*/
+function fill_families_decade( _sheet, _stats, _decade_range, _decade )
+{
+	const families_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.Families );
+
+	if( families_range.getRow() == _decade_range.getRow() )
+		return;
+
+	_stats.m_families_counts.set( Family.PC, 0 );
+	_stats.m_families_counts.set( Family.Sony, 0 );
+	_stats.m_families_counts.set( Family.Xbox, 0 );
+	_stats.m_families_counts.set( Family.Nintendo, 0 );
+	_stats.m_families_counts.set( Family.Sega, 0 );
+
+	_stats.m_platforms.forEach( function ( _platform )
+	{
+		if ( _platform.m_family == Family.None )
+			return;
+
+		_stats.m_families_counts.set( _platform.m_family, _stats.m_families_counts.get( _platform.m_family ) + _platform.m_decades[ _decade ] );
+	} );
+
+	_stats.m_families_counts = new Map( [ ..._stats.m_families_counts.entries() ].sort( ( a, b ) => b[ 1 ] - a[ 1 ] ) );
+
+	let family_row = families_range.getRow() + 1;
+	const family_name_col = families_range.getColumn();
+	const family_count_col = family_name_col + 1;
+
+	_stats.m_families_counts.forEach( function ( _value, _key, _map )
+	{
+		let percentage = _value / _stats.m_nb_games_by_decades[ _decade ] * 100;
+		_sheet.getRange( family_row, family_name_col ).setValue( _key );
+
+		if ( _value == 0 )
+			_sheet.getRange( family_row, family_count_col ).setValue( "-" );
+		else
+			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
+
+		const family_colors = get_family_colors( _key );
+		let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
+		platform_range.setBackground( family_colors.m_background_color );
+		platform_range.setFontColor( family_colors.m_foreground_color );
+
+		++family_row;
+	} );
+}
+
+/* **********************************************************
+*  Fill the version stats columns of the given decade
+*/
+function fill_versions_decade( _sheet, _stats, _decade_range, _decade )
+{
+	const version_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.Versions );
+
+	if( version_range.getRow() == _decade_range.getRow() )
+		return;
+
+	_stats.m_versions.sort( ( a, b ) => b.m_decades[ _decade ] - a.m_decades[ _decade ] );
+
+	let version_row = version_range.getRow() + 1;
+	const version_name_col = version_range.getColumn();
+	const version_number_col = version_name_col + 1;
+
+	_stats.m_versions.forEach( function ( _version )
+	{
+		let percentage = _version.m_decades[ _decade ] / _stats.m_nb_games_by_decades[ _decade ] * 100;
+		_sheet.getRange( version_row, version_name_col ).setValue( _version.m_version );
+
+		if ( _version.m_decades[ _decade ] == 0 )
+			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
+		else
+			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_decades[ _decade ] + " (" + percentage.toFixed() + "%)" );
 
 		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
 		platform_range.setBackground( _version.m_background_color );
@@ -451,13 +619,14 @@ function collect_sheet_stats( _sheet, _stats )
 		m_rating: -1
 	};
 
-	columns_indices.m_state 	= get_column_data_index( _sheet, ModelColumnName.State, header_row );
-	columns_indices.m_game 		= get_column_data_index( _sheet, ModelColumnName.Game, header_row );
-	columns_indices.m_platform 	= get_column_data_index( _sheet, ModelColumnName.Platfrom, header_row );
-	columns_indices.m_version 	= get_column_data_index( _sheet, ModelColumnName.Version, header_row );
-	columns_indices.m_estimate 	= get_column_data_index( _sheet, ModelColumnName.Estimate, header_row );
-	columns_indices.m_played 	= get_column_data_index( _sheet, ModelColumnName.Played, header_row );
-	columns_indices.m_delta 	= get_column_data_index( _sheet, ModelColumnName.Delta, header_row );
+	columns_indices.m_state		= get_column_data_index( _sheet, ModelColumnName.State, header_row );
+	columns_indices.m_year		= get_column_data_index( _sheet, ModelColumnName.Year, header_row );
+	columns_indices.m_game		= get_column_data_index( _sheet, ModelColumnName.Game, header_row );
+	columns_indices.m_platform	= get_column_data_index( _sheet, ModelColumnName.Platfrom, header_row );
+	columns_indices.m_version	= get_column_data_index( _sheet, ModelColumnName.Version, header_row );
+	columns_indices.m_estimate	= get_column_data_index( _sheet, ModelColumnName.Estimate, header_row );
+	columns_indices.m_played	= get_column_data_index( _sheet, ModelColumnName.Played, header_row );
+	columns_indices.m_delta		= get_column_data_index( _sheet, ModelColumnName.Delta, header_row );
 
 	let treated_games = 0;
 
@@ -531,8 +700,7 @@ function collect_platform( _range_data, _stats, _data_row, _columns_indices, _ga
 	if( platform != null )
 	{
 		++platform.m_count;
-		_game_infos.m_platform = platform.m_name;
-		_game_infos.m_platform_count = platform.m_count;
+		_game_infos.m_platform = platform;
 	}
 	else
 	{
@@ -543,10 +711,21 @@ function collect_platform( _range_data, _stats, _data_row, _columns_indices, _ga
 			new_platform.m_count = 1;
 			_stats.m_platforms.push( new_platform );
 
-			_game_infos.m_platform = new_platform.m_name;
-			_game_infos.m_platform_count = new_platform.m_count;
+			_game_infos.m_platform = new_platform;
+			platform = new_platform;
 		}
 	}
+
+	if( platform == null || _columns_indices.m_year < 0 )
+		return;
+	
+	const decade = get_decade( _range_data[ _data_row ][ _columns_indices.m_year ] );
+
+	if( decade == Decade.OOB )
+		return;
+
+	++platform.m_decades[ decade ];
+	++_stats.m_nb_games_by_decades[ decade ];
 }
 
 /* **********************************************************
@@ -561,8 +740,7 @@ function collect_version( _range_data, _stats, _data_row, _columns_indices, _gam
 	if( version != null )
 	{
 		++version.m_count;
-		_game_infos.m_version = version.m_version;
-		_game_infos.m_version_count = version.m_count;
+		_game_infos.m_version = version;
 	}
 	else
 	{
@@ -576,11 +754,19 @@ function collect_version( _range_data, _stats, _data_row, _columns_indices, _gam
 		new_version.m_count = 1;
 		_stats.m_versions.push( new_version );
 
-		_game_infos.m_version = new_version.m_version;
-		_game_infos.m_version_count = new_version.m_count;
+		_game_infos.m_version = new_version;
+		version = new_version;
 	}
 
-	version = _stats.m_versions.find( Version => Version.m_version === _range_data[ _data_row ][ _columns_indices.m_version ] );
+	if( version == null || _columns_indices.m_year < 0 )
+		return;
+	
+	const decade = get_decade( _range_data[ _data_row ][ _columns_indices.m_year ] );
+
+	if( decade == Decade.OOB )
+		return;
+
+	++version.m_decades[ decade ];
 }
 
 /* **********************************************************

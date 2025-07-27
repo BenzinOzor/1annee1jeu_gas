@@ -49,13 +49,24 @@ const HOME_STATS_RANGE = "H26:P103";
 
 const HOME_STATS_FINISHED_GAMES = "Jeux terminés";
 const HOME_STATS_NB_GAMES = "Nombre total de jeux";
-const HOME_STATS_PLATFORMS = "Plateformes";
 const HOME_STATS_TOP_PLATFORMS = "Top 5 Plateformes";
 const HOME_STATS_FAMILIES = "Familles";
 const HOME_STATS_VERSIONS = "Versions";
+const HOME_STATS_DECADE_WIDTH = 9;
+const HOME_STATS_DECADE_HEIGHT = 9;
+const HOME_STATS_EMPTY_CELL_BACKGROUND = "#efefef";
+const HOME_STATS_EMPTY_CELL_FOREGROUND = "#b7b7b7";
 
 const HomeStat = 
 {
+	Platforms: 'Plateformes',
+	TopPlatforms: 'Top 5 Plateformes',
+	Families: 'Familles',
+	Versions: 'Versions',
+	Decade90s: '1990 - 1999',
+	Decade2Ks: '2000 - 2009',
+	Decade2K10s: '2010 - 2019',
+	Decade2K20s: '2020 - 2029',
 	EstimatedTime: 'Temps estimé',
 	PlayedTime: 'Temps passé',
 	AverageDelta: 'Delta moyen',
@@ -120,4 +131,14 @@ const VersionName =
 	Remake: 'Remake',
 	Remaster: 'Remaster',
 	Emulation: 'Émulation'
+}
+
+const Decade =
+{
+	OOB: -1,				// Out of handled decades
+	Nineties: 0,			// 90 - 99
+	TwoKs: 1,				// 2000 - 2009
+	TwoKTens: 2,			// 2010 - 2019
+	TwoKTwneties: 3,		// 2020 - 2029
+	Count: 4
 }

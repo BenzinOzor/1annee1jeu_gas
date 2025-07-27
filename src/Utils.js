@@ -296,7 +296,31 @@ function find_text_in_range( _sheet, _range, _text )
 	return _range;
 }
 
+/* **********************************************************
+*  Turn number into a string with leading zeros.
+*/
 function zero_pad( _number, _pad )
 {
 	return String( _number ).padStart( _pad, '0' );
+}
+
+/* **********************************************************
+*  Retrieve the decade in which is the given year for stats purposes.
+*  Years under 1990 and over 2029 are out of bounds for now.
+*/
+function get_decade( _year )
+{
+	if( _year >= 1990 && _year < 2000 )
+		return Decade.Nineties;
+
+	if( _year >= 2000 && _year < 2010 )
+		return Decade.TwoKs;
+
+	if( _year >= 2010 && _year < 2020 )
+		return Decade.TwoKTens;
+
+	if( _year >= 2020 && _year < 2030 )
+		return Decade.TwoKTwneties;
+
+	return Decade.OOB;
 }
