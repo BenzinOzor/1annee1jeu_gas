@@ -5,7 +5,7 @@ function creation_popup()
 {
 	var html = HtmlService.createHtmlOutputFromFile( 'page_creation_box' )
 		.setWidth( 400 )
-		.setHeight( 400 );
+		.setHeight( 500 );
 	SpreadsheetApp.getUi().showModalDialog( html, 'Nouvelle page' );
 }
 
