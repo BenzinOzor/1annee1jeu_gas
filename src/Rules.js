@@ -5,6 +5,9 @@ function reset_participants_stats_rules( _sheet )
 	const participants_col_values = _sheet.getRange( participants_col_letter + HOME_PARTICIPANTS_FIRST_ROW + ':' + participants_col_letter ).getValues();
 	const nb_participants = participants_col_values.filter( String ).length;
 
+	if( nb_participants <= 0 )
+		return;
+
 	let participants_range = _sheet.getRange( HOME_PARTICIPANTS_FIRST_ROW, HOME_PARTICIPANTS_COL, nb_participants, HOME_PARTICIPANTS_TABLE_WIDTH );
 
 	// Clearing old participants data from table first row to last row with data
