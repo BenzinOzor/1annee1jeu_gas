@@ -23,11 +23,11 @@ class Duration
 
 		// If the given time is negative, we have to use the absolute value of the hours here, otherwise the sum will be wrong.
 		// -10:00:01 => -3600 + 1 => 35999 when it should be 36001.
-		this.m_total_seconds = Math.abs( hours ) * SECONDS_IN_HOUR + minutes * SECONDS_IN_MINUTE + seconds;
+		this.m_seconds = Math.abs( hours ) * SECONDS_IN_HOUR + minutes * SECONDS_IN_MINUTE + seconds;
 
 		// checking the first character of the string for sign. if hours are 0, it won't be detected otherwise
 		if( _duration[ 0 ] == '-' )
-			this.m_total_seconds *= -1;
+			this.m_seconds *= -1;
 	}
 
 	/* **********************************************************
@@ -35,13 +35,13 @@ class Duration
 	*/
 	toString()
 	{
-		const abs_seconds = Math.abs( this.m_total_seconds );
+		const abs_seconds = Math.abs( this.m_seconds );
 		// We have to use the absolute value of the seconds because the floor function won't go in the right direction in negative.
 		const hours = Math.floor( abs_seconds / SECONDS_IN_HOUR );
 		const minutes = Math.floor( (abs_seconds % SECONDS_IN_HOUR) / SECONDS_IN_MINUTE );
 		const seconds = abs_seconds % SECONDS_IN_MINUTE;
 
-		return (this.m_total_seconds < 0 ? '-' : '') + zero_pad( hours, 1 ) + ':' + zero_pad( minutes, 2 ) + ':' + zero_pad( seconds, 2 );
+		return (this.m_seconds < 0 ? '-' : '') + zero_pad( hours, 1 ) + ':' + zero_pad( minutes, 2 ) + ':' + zero_pad( seconds, 2 );
 	}
 
 	/* **********************************************************
@@ -61,25 +61,25 @@ class Duration
 	{
 		if( _absolute )
 		{
-			const abs_1 = Math.abs( _duration_1.m_total_seconds );
-			const abs_2 = Math.abs( _duration_2.m_total_seconds );
+			const abs_1 = Math.abs( _duration_1.m_seconds );
+			const abs_2 = Math.abs( _duration_2.m_seconds );
 
 			return abs_1 > abs_2 ? 1 : (abs_1 < abs_2 ? -1 : 0);
 		}
 
-		return _duration_1.m_total_seconds > _duration_2.m_total_seconds ? 1 : (_duration_1.m_total_seconds < _duration_2.m_total_seconds ? -1 : 0);
+		return _duration_1.m_seconds > _duration_2.m_seconds ? 1 : (_duration_1.m_seconds < _duration_2.m_seconds ? -1 : 0);
 	}
 
 	copy( _duration )
 	{
-		this.m_total_seconds = _duration.m_total_seconds;
+		this.m_seconds = _duration.m_seconds;
 	}
 
 	static copy( _duration )
 	{
 		let result = new Duration();
 
-		result.m_total_seconds = _duration.m_total_seconds;
+		result.m_seconds = _duration.m_seconds;
 		
 		return result;
 	}
@@ -89,7 +89,7 @@ class Duration
 	*/
 	add( _duration )
 	{
-		this.m_total_seconds += _duration.m_total_seconds;
+		this.m_seconds += _duration.m_seconds;
 	}
 
 	/* **********************************************************
@@ -100,7 +100,7 @@ class Duration
 	{
 		let result = new Duration();
 
-		result.m_total_seconds = _duration_1.m_total_seconds + _duration_2.m_total_seconds;
+		result.m_seconds = _duration_1.m_seconds + _duration_2.m_seconds;
 		
 		return result;
 	}
@@ -110,7 +110,7 @@ class Duration
 	*/
 	substract( _duration )
 	{
-		this.m_total_seconds -= _duration.m_total_seconds;
+		this.m_seconds -= _duration.m_seconds;
 	}
 
 	/* **********************************************************
@@ -121,7 +121,7 @@ class Duration
 	{
 		let result = new Duration();
 
-		result.m_total_seconds = _duration_1.m_total_seconds - _duration_2.m_total_seconds;
+		result.m_seconds = _duration_1.m_seconds - _duration_2.m_seconds;
 
 		return result;
 	}
@@ -132,7 +132,7 @@ class Duration
 	divide( _number )
 	{
 		if( _number != 0 )
-			this.m_total_seconds = Math.round( this.m_total_seconds / _number );
+			this.m_seconds = Math.round( this.m_seconds / _number );
 	}
 
 	/* **********************************************************
@@ -144,7 +144,7 @@ class Duration
 		let result = new Duration();
 
 		if( _number != 0 )
-			result.m_total_seconds = Math.round( _duration.m_total_seconds / _number );
+			result.m_seconds = Math.round( _duration.m_seconds / _number );
 
 		return result;
 	}

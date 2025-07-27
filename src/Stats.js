@@ -62,11 +62,11 @@ class Stats
 		this.m_deltas_count = 0;
 
 		this.m_shortest_estimate = new DurationInfos();
-		this.m_shortest_estimate.m_estimate.m_total_seconds = MAX_DURATION_SECONDS;
+		this.m_shortest_estimate.m_estimate.m_seconds = MAX_DURATION_SECONDS;
 		this.m_longest_estimate = new DurationInfos();
 
 		this.m_shortest_played = new DurationInfos();
-		this.m_shortest_played.m_played.m_total_seconds = MAX_DURATION_SECONDS;
+		this.m_shortest_played.m_played.m_seconds = MAX_DURATION_SECONDS;
 		this.m_longest_played = new DurationInfos();
 
 		this.m_biggest_negative_delta = new DurationInfos();
@@ -330,7 +330,7 @@ function fill_durations_stats( _sheet, _stats )
 		_sheet.getRange( duration_row + 1, duration_col ).setValue( _stats.m_total_played.toString() );
 
 		++duration_col;
-		let durations = get_years_days_hours( _stats.m_total_estimate.m_total_seconds );
+		let durations = get_years_days_hours( _stats.m_total_estimate.m_seconds );
 
 		if( durations.m_years > 0 )
 			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_years + 'an(s) ' + durations.m_days + 'j ' + durations.m_hours + 'h' );
@@ -338,7 +338,7 @@ function fill_durations_stats( _sheet, _stats )
 			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_days + 'j ' + durations.m_hours + 'h' );
 
 		++duration_row;
-		durations = get_years_days_hours( _stats.m_total_played.m_total_seconds );
+		durations = get_years_days_hours( _stats.m_total_played.m_seconds );
 
 		if( durations.m_years > 0 )
 			_sheet.getRange( duration_row, duration_col ).setValue( durations.m_years + 'an(s) ' + durations.m_days + 'j ' + durations.m_hours + 'h' );
@@ -593,7 +593,7 @@ function collect_estimate( _range_data, _stats, _data_row, _columns_indices, _ga
 
 	const estimate = new Duration( _range_data[ _data_row ][ _columns_indices.m_estimate ] );
 
-	if( isNaN( estimate.m_total_seconds ) || estimate.m_total_seconds == 0 )
+	if( isNaN( estimate.m_seconds ) || estimate.m_seconds == 0 )
 		return;
 
 	_stats.m_total_estimate.add( estimate );
@@ -611,12 +611,12 @@ function collect_played( _range_data, _stats, _data_row, _columns_indices, _game
 
 	const played = new Duration( _range_data[ _data_row ][ _columns_indices.m_played ] );
 
-	if( isNaN( played.m_total_seconds ) || played.m_total_seconds == 0 )
+	if( isNaN( played.m_seconds ) || played.m_seconds == 0 )
 		return;
 
 	_stats.m_total_played.add( played );
 	++_stats.m_played_count;
-	_game_infos.m_played.m_total_seconds = played.m_total_seconds;
+	_game_infos.m_played.m_seconds = played.m_seconds;
 }
 
 /* **********************************************************
@@ -632,16 +632,16 @@ function collect_delta( _range_data, _stats, _data_row, _columns_indices, _game_
 	}
 
 	// We can try to compute what is the delta for a game if we couldn't find the information on the sheet.
-	if( isNaN( delta.m_total_seconds ) || delta.m_total_seconds == 0 )
+	if( isNaN( delta.m_seconds ) || delta.m_seconds == 0 )
 	{
 		// Game need to be finished to have a valid delta.
 		if( _columns_indices.m_state >= 0 && _range_data[ _data_row ][ _columns_indices.m_state ] != GameState.Done )
 			return;
 
-		if( isNaN( _game_infos.m_estimate.m_total_seconds ) || _game_infos.m_estimate.m_total_seconds == 0 )
+		if( isNaN( _game_infos.m_estimate.m_seconds ) || _game_infos.m_estimate.m_seconds == 0 )
 			return;
 
-		if( isNaN( _game_infos.m_played.m_total_seconds ) || _game_infos.m_played.m_total_seconds == 0 )
+		if( isNaN( _game_infos.m_played.m_seconds ) || _game_infos.m_played.m_seconds == 0 )
 			return;
 
 		// We have both an estimate and a played durations, we can determine the delta.
@@ -649,12 +649,12 @@ function collect_delta( _range_data, _stats, _data_row, _columns_indices, _game_
 	}
 
 	// If we still have an invalid delta, there is nothing to do, return.
-	if( isNaN( delta.m_total_seconds ) )
+	if( isNaN( delta.m_seconds ) )
 		return;
 
 	_stats.m_total_delta.add( delta );
 	++_stats.m_deltas_count;
-	_game_infos.m_delta.m_total_seconds = delta.m_total_seconds;
+	_game_infos.m_delta.m_seconds = delta.m_seconds;
 }
 
 function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos, _record_type )
@@ -671,7 +671,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 	{
 		case DurationRecord.ShortestEstimate:
 		{
-			if( isNaN( _game_infos.m_estimate.m_total_seconds ) || _game_infos.m_estimate.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_estimate.m_seconds ) || _game_infos.m_estimate.m_seconds == 0 )
 				return;
 
 			if( _stats.m_shortest_estimate.m_estimate.compare( _game_infos.m_estimate ) > 0 )
@@ -685,7 +685,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 		}
 		case DurationRecord.LongestEstimate:
 		{
-			if( isNaN( _game_infos.m_estimate.m_total_seconds ) || _game_infos.m_estimate.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_estimate.m_seconds ) || _game_infos.m_estimate.m_seconds == 0 )
 				return;
 
 			if( _stats.m_longest_estimate.m_estimate.compare( _game_infos.m_estimate ) < 0 )
@@ -699,7 +699,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 		}
 		case DurationRecord.ShortestPlayed:
 		{
-			if( isNaN( _game_infos.m_played.m_total_seconds ) || _game_infos.m_played.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_played.m_seconds ) || _game_infos.m_played.m_seconds == 0 )
 				return;
 
 			if( _stats.m_shortest_played.m_played.compare( _game_infos.m_played ) > 0 )
@@ -713,7 +713,7 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 		}
 		case DurationRecord.LongestPlayed:
 		{
-			if( isNaN( _game_infos.m_played.m_total_seconds ) || _game_infos.m_played.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_played.m_seconds ) || _game_infos.m_played.m_seconds == 0 )
 				return;
 
 			if( _stats.m_longest_played.m_played.compare( _game_infos.m_played ) < 0 )
@@ -727,10 +727,10 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 		}
 		case DurationRecord.NegativeDelta:
 		{
-			if( isNaN( _game_infos.m_delta.m_total_seconds ) || _game_infos.m_delta.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_delta.m_seconds ) || _game_infos.m_delta.m_seconds == 0 )
 				return;
 
-			if( _game_infos.m_delta.m_total_seconds < 0 && _stats.m_biggest_negative_delta.m_delta.compare( _game_infos.m_delta ) > 0 )
+			if( _game_infos.m_delta.m_seconds < 0 && _stats.m_biggest_negative_delta.m_delta.compare( _game_infos.m_delta ) > 0 )
 			{
 				_stats.m_biggest_negative_delta.m_delta.copy( _game_infos.m_delta );
 				_stats.m_biggest_negative_delta.m_estimate = _game_infos.m_estimate;
@@ -743,10 +743,10 @@ function collect_duration_record( _sheet, _stats, _range, _data_row, _game_infos
 		}
 		case DurationRecord.PositiveDelta:
 		{
-			if( isNaN( _game_infos.m_delta.m_total_seconds ) || _game_infos.m_delta.m_total_seconds == 0 )
+			if( isNaN( _game_infos.m_delta.m_seconds ) || _game_infos.m_delta.m_seconds == 0 )
 				return;
 
-			if( _game_infos.m_delta.m_total_seconds > 0 && _stats.m_biggest_positive_delta.m_delta.compare( _game_infos.m_delta ) < 0 )
+			if( _game_infos.m_delta.m_seconds > 0 && _stats.m_biggest_positive_delta.m_delta.compare( _game_infos.m_delta ) < 0 )
 			{
 				_stats.m_biggest_positive_delta.m_delta.copy( _game_infos.m_delta );
 				_stats.m_biggest_positive_delta.m_estimate = _game_infos.m_estimate;
