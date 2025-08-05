@@ -26,7 +26,7 @@ class Version
 {
 	constructor()
 	{
-		this.m_version = VersionName.Original;
+		this.m_version = VersionName.None;
 		this.m_background_color = "#ffffff";
 		this.m_foreground_color = "#000000";
 		this.m_count = 0;
@@ -197,6 +197,9 @@ function handle_stats( _stats )
 	// Seems quite unlikely but adding any missing version we didn't find in the read sheets.
 	for ( const version in VersionName )
 	{
+		if ( version == VersionName.None )
+			continue;
+
 		if ( !_stats.m_versions.find( Version => Version.m_version === VersionName[ version ] ) )
 		{
 			let new_version = new Version;
@@ -230,7 +233,7 @@ function fill_platfroms_stats( _sheet, _stats )
 		if ( _platform.m_count == 0 )
 			_sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
 		else
-			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_count + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_count + " (" + percentage.toFixed(1) + "%)" );
 
 		let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
 		platform_range.setBackground( _platform.m_background_color );
@@ -259,7 +262,7 @@ function fill_families_stats( _sheet, _stats )
 		if ( _value == 0 )
 			_sheet.getRange( family_row, family_count_col ).setValue( "-" );
 		else
-			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed(1) + "%)" );
 
 		const family_colors = get_family_colors( _key );
 		let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
@@ -289,7 +292,7 @@ function fill_versions_stats( _sheet, _stats )
 		if ( _version.m_count == 0 )
 			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
 		else
-			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_count + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_count + " (" + percentage.toFixed(1) + "%)" );
 
 		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
 		platform_range.setBackground( _version.m_background_color );
@@ -364,7 +367,7 @@ function fill_platforms_decade( _sheet, _stats, _decade_range, _decade )
 		else
 		{
 			_sheet.getRange( platform_row, platform_name_col ).setValue( _platform.m_name );
-			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_decades[ _decade ] + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_decades[ _decade ] + " (" + percentage.toFixed(1) + "%)" );
 			platform_range.setBackground( _platform.m_background_color );
 			platform_range.setFontColor( _platform.m_foreground_color );
 		}
@@ -411,7 +414,7 @@ function fill_families_decade( _sheet, _stats, _decade_range, _decade )
 		if ( _value == 0 )
 			_sheet.getRange( family_row, family_count_col ).setValue( "-" );
 		else
-			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed(1) + "%)" );
 
 		const family_colors = get_family_colors( _key );
 		let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
@@ -446,7 +449,7 @@ function fill_versions_decade( _sheet, _stats, _decade_range, _decade )
 		if ( _version.m_decades[ _decade ] == 0 )
 			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
 		else
-			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_decades[ _decade ] + " (" + percentage.toFixed() + "%)" );
+			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_decades[ _decade ] + " (" + percentage.toFixed(1) + "%)" );
 
 		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
 		platform_range.setBackground( _version.m_background_color );
@@ -692,7 +695,7 @@ function collect_sheet_stats( _sheet, _stats )
 */
 function collect_platform( _range_data, _stats, _data_row, _columns_indices, _game_infos )
 {
-	if( _columns_indices.m_platform < 0 )
+	if( _columns_indices.m_platform < 0 || _range_data[ _data_row ][ _columns_indices.m_platform ] == "" )
 		return;
 
 	let platform = _stats.m_platforms.find( Platform => Platform.m_name === _range_data[ _data_row ][ _columns_indices.m_platform ] );
@@ -733,7 +736,7 @@ function collect_platform( _range_data, _stats, _data_row, _columns_indices, _ga
 */
 function collect_version( _range_data, _stats, _data_row, _columns_indices, _game_infos )
 {
-	if( _columns_indices.m_version < 0 )
+	if( _columns_indices.m_version < 0 || _range_data[ _data_row ][ _columns_indices.m_platform ] == "" )
 		return;
 
 	let version = _stats.m_versions.find( Version => Version.m_version === _range_data[ _data_row ][ _columns_indices.m_version ] );
@@ -744,6 +747,9 @@ function collect_version( _range_data, _stats, _data_row, _columns_indices, _gam
 	}
 	else
 	{
+    if( is_valid_version(_range_data[ _data_row ][ _columns_indices.m_version ]) == false)
+      return;
+
 		let new_version = new Version;
 		new_version.m_version = _range_data[ _data_row ][ _columns_indices.m_version ];
 		let colors = get_version_colors( new_version.m_version );

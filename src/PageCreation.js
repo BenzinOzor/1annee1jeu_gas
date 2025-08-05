@@ -162,6 +162,13 @@ function add_columns( sheet, params )
 function add_rows( sheet, params )
 {
 	Logger.log( "Adding rows..." );
+
+	if( params.birth_year < MIN_BIRTH_YEAR )
+	{
+		Logger.log( 'Birth year too low... using ' + MIN_BIRTH_YEAR + ' instead.' );
+		params.birth_year = MIN_BIRTH_YEAR;
+	}
+
 	sheet.getRange( MODEL_TABLE_FIRST_ROW, MODEL_TABLE_YEAR_COL ).setValue( params.birth_year );
 	const nb_columns = get_number_of_columns( sheet );
 	const model_range = sheet.getRange( MODEL_TABLE_FIRST_ROW, 1, 1, nb_columns );
@@ -175,7 +182,6 @@ function add_rows( sheet, params )
 		sheet.getRange( row, MODEL_TABLE_YEAR_COL ).setValue( year );
 	}
 
-	sheet.setRowHeightsForced( MODEL_TABLE_FIRST_ROW, row - MODEL_TABLE_FIRST_ROW, DEFAULT_ROW_HEIGHT );
 	Logger.log( "Added %d rows.", row - MODEL_TABLE_FIRST_ROW );
 }
 

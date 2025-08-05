@@ -79,6 +79,20 @@ function is_completion_status( _string )
 	}
 }
 
+function is_valid_version( _version )
+{
+	switch( _version )
+	{
+		case VersionName.Original:
+		case VersionName.Remake:
+		case VersionName.Remaster:
+		case VersionName.Emulation:
+			return true;
+		default:
+			return false;
+	}
+}
+
 /* **********************************************************
 *  Count the number of rows in the user table. It can vary from the strict season - birth year if some lines have been added in case of game replacement for example.
 */
@@ -253,6 +267,13 @@ function get_family_infos( _platform )
 				platform.m_family = Family.None;
 				platform.m_background_color = "#ffe5a0";
 				platform.m_foreground_color = "#473821";
+				break;
+			}
+		case PlatformName.Mobile:
+			{
+				platform.m_family = Family.None;
+				platform.m_background_color = "#d4edbc";
+				platform.m_foreground_color = "#11734b";
 				break;
 			}
 		default:

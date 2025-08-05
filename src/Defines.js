@@ -42,6 +42,7 @@ const HOME_GAMES_TO_FINISH_COL = 4; // D
 const HOME_PROGRESSION_BAR_COL = 5; // E
 const HOME_CURRENT_GAME_COL = 6;    // F
 
+const MIN_BIRTH_YEAR = 1950;
 const MAX_DURATION_SECONDS = 3602439;	// 999:99:99
 
 // STATS
@@ -92,6 +93,7 @@ const PlatformName =
 {
 	None: 'None',
 	PC: 'PC',
+	Mobile: 'Mobile',
 	PS1: 'PS1',
 	PS2: 'PS2',
 	PS3: 'PS3',
@@ -127,6 +129,7 @@ const PlatformName =
 
 const VersionName =
 {
+	None: 'None',
 	Original: 'Original',
 	Remake: 'Remake',
 	Remaster: 'Remaster',
