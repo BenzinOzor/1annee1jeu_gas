@@ -49,9 +49,6 @@ const MAX_DURATION_SECONDS = 3602439;	// 999:99:99
 const HOME_STATS_RANGE = "H26:P104";
 const HOME_STATS_CELL = [ 26, 8 ];	// "H26"
 const HOME_STATS_WIDTH = 9;
-
-const HOME_STATS_DECADE_WIDTH = 9;
-const HOME_STATS_DECADE_HEIGHT = 9;
 const HOME_STATS_EMPTY_CELL_BACKGROUND = "#efefef";
 const HOME_STATS_EMPTY_CELL_FOREGROUND = "#b7b7b7";
 
@@ -123,7 +120,8 @@ const PlatformName =
 	MegaCD: 'Mega-CD',
 	Saturn: 'Saturn',
 	Dreamcast: 'Dreamcast',
-	NeoGeo: 'Neo-Geo'
+	NeoGeo: 'Neo-Geo',
+	Arcade: 'Arcade',
 }
 
 const VersionName =

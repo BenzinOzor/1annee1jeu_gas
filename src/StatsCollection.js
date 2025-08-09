@@ -87,6 +87,7 @@ class GameInfos
 		this.m_number = 0;
 		this.m_state = "";
 		this.m_game = "";
+		this.m_year = 0;
 		this.m_platform = new Platform();
 		this.m_version = new Version();
 		this.m_version_count = 0;
@@ -98,7 +99,7 @@ class GameInfos
 
 	toString()
 	{
-		return '#'+ this.m_number +' - '+ this.m_game +' - '+ this.m_state +' - '+ this.m_platform.m_name +' ('+ this.m_platform.m_count + ' - ' + this.m_platform.m_decades +') '
+		return '#'+ this.m_number +' - '+ this.m_game +' ('+ this.m_year +') - '+ this.m_state +' - '+ this.m_platform.m_name +' ('+ this.m_platform.m_count + ' - ' + this.m_platform.m_decades +') '
 		+ this.m_version.m_version +' ('+ this.m_version.m_count + ' - ' + this.m_version.m_decades
 		+') - est. '+ this.m_estimate +' - played '+ this.m_played +' - delta '+ this.m_delta;
 	}
@@ -148,10 +149,10 @@ function compute_stats()
 	fill_versions_stats( home_sheet, stats, stats_values );
 	fill_durations_stats( home_sheet, stats );
 
-	/*fill_decade_stats( home_sheet, stats, Decade.Nineties );
-	fill_decade_stats( home_sheet, stats, Decade.TwoKs );
-	fill_decade_stats( home_sheet, stats, Decade.TwoKTens );
-	fill_decade_stats( home_sheet, stats, Decade.TwoKTwneties );*/
+	fill_decade_stats( home_sheet, stats, stats_values, Decade.Nineties );
+	fill_decade_stats( home_sheet, stats, stats_values, Decade.TwoKs );
+	fill_decade_stats( home_sheet, stats, stats_values, Decade.TwoKTens );
+	fill_decade_stats( home_sheet, stats, stats_values, Decade.TwoKTwneties );
 }
 
 /* **********************************************************
@@ -241,10 +242,12 @@ function get_table_infos( _range_values )
 		m_rating: -1
 	};
 
-	let infos = { m_header_row: -1, m_first_game_row: -1, m_nb_rows: 0, m_nb_cols: 0, columns_indices };
-
+	let infos = { m_header_row: -1, m_first_game_row: -1, m_max_row: 0, m_nb_cols: 0, columns_indices };
+	
 	if( _range_values.length == 0 || _range_values[ 0 ].length == 0 )
 		return infos;
+
+	Logger.log( "		Getting table infos rage..." );
 
 	// Looking for the header row
 	for( let row = 0; row < _range_values.length; ++row )
@@ -261,7 +264,7 @@ function get_table_infos( _range_values )
 	// If it is, it means there is nothing in the sheet under the games table and the rows stops at the end of the datas we have so we don't need to iterate on it.
 	if( is_completion_status( _range_values[ _range_values.length - 1][ 0 ] ) )
 	{
-		infos.m_nb_rows = (_range_values.length - 1) - infos.m_header_row;
+		infos.m_max_row = _range_values.length;
 	}
 	else
 	{
@@ -270,7 +273,7 @@ function get_table_infos( _range_values )
 		{
 			if( is_completion_status( _range_values[ row ][ 0 ] ) == false )
 			{
-				infos.m_nb_rows = row - infos.m_header_row - 1;		// Decrementing because the variable row is one too far, because we wait for an invalid row.
+				infos.m_max_row = row;
 				break;
 			}
 		}
@@ -328,7 +331,7 @@ function collect_sheet_stats( _sheet, _stats )
 	const prev_played_count = _stats.m_played_count;
 	const prev_deltas_count = _stats.m_deltas_count;
 
-	for ( data_row = table_infos.m_first_game_row; data_row < table_infos.m_nb_rows; ++data_row )
+	for ( data_row = table_infos.m_first_game_row; data_row < table_infos.m_max_row; ++data_row )
 	{
 		if ( table_infos.columns_indices.m_state < 0 || table_infos.columns_indices.m_game < 0 )
 			continue;
@@ -343,6 +346,7 @@ function collect_sheet_stats( _sheet, _stats )
 
 		game_infos.m_game = range_data[ data_row ][ table_infos.columns_indices.m_game ];
 		game_infos.m_state = range_data[ data_row ][ table_infos.columns_indices.m_state ];
+		game_infos.m_year = range_data[ data_row ][ table_infos.columns_indices.m_year ];
 
 		collect_platform( range_data, _stats, data_row, table_infos.columns_indices, game_infos );
 		collect_version( range_data, _stats, data_row, table_infos.columns_indices, game_infos );
@@ -482,12 +486,12 @@ function collect_estimate( _range_data, _stats, _data_row, _columns_indices, _ga
 */
 function collect_played( _range_data, _stats, _data_row, _columns_indices, _game_infos )
 {
-	if( _columns_indices.m_played < 0 )
+	if( _columns_indices.m_played < 0 || _range_data[ _data_row ][ _columns_indices.m_state ] != GameState.Done )
 		return;
 
 	const played = new Duration( _range_data[ _data_row ][ _columns_indices.m_played ] );
 
-	if( isNaN( played.m_seconds ) || played.m_seconds == 0 )
+	if( isNaN( played.m_seconds ) || played.m_seconds == 0 || played.m_seconds >= MAX_DURATION_SECONDS )
 		return;
 
 	_stats.m_total_played.add( played );

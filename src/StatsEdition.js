@@ -20,9 +20,9 @@ class StatData
 	}
 }
 
-function fill_stat_range( _sheet, _stats_values, _stat_data )
+function fill_stat_range( _sheet, _stats_values, _stat_data, _from_row = 0 )
 {
-	const stat_header_cell = find_text_in_value_array( _stats_values, _stat_data.m_type );
+	const stat_header_cell = find_text_in_value_array( _stats_values, _stat_data.m_type, _from_row );
 
 	const stat_sheet_row = HOME_STATS_CELL[ 0 ] + stat_header_cell.m_row + 1;
 	const stat_sheet_col = HOME_STATS_CELL[ 1 ] + stat_header_cell.m_col;
@@ -133,7 +133,7 @@ function fill_versions_stats( _sheet, _stats, _stats_values )
 /* **********************************************************
 *  Fill the platforms, families and versions stats of a given decade
 */
-function fill_decade_stats( _sheet, _stats, _decade )
+function fill_decade_stats( _sheet, _stats, _stats_values, _decade )
 {
 	let get_decade_header = () =>
 	{
@@ -152,139 +152,125 @@ function fill_decade_stats( _sheet, _stats, _decade )
 		}
 	}
 
-	const decade_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), get_decade_header() );
+	Logger.log( "	Filling %s stats...", get_decade_header() );
 
-	if( decade_range == _sheet.getRange( HOME_STATS_RANGE ) )
+	const decade_cell = find_text_in_value_array( _stats_values, get_decade_header() );
+
+	if( decade_cell.m_row < 0 || decade_cell.m_col < 0 )
 		return;
 
-	fill_platforms_decade( _sheet, _stats, decade_range, _decade );
-	fill_families_decade( _sheet, _stats, decade_range, _decade );
-	fill_versions_decade( _sheet, _stats, decade_range, _decade );
+	fill_platforms_decade( _sheet, _stats, _stats_values, _decade, decade_cell );
+	fill_families_decade( _sheet, _stats, _stats_values, _decade, decade_cell );
+	fill_versions_decade( _sheet, _stats, _stats_values, _decade, decade_cell );
 }
 
 /* **********************************************************
 *  Fill the platform stats columns of the given decade
 */
-function fill_platforms_decade( _sheet, _stats, _decade_range, _decade )
+function fill_platforms_decade( _sheet, _stats, _stats_values, _decade, _decade_cell )
 {
-	const platforms_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.TopPlatforms );
+	Logger.log( "		Filling platforms stats..." );
 
-	if( platforms_range.getRow() == _decade_range.getRow() )
-		return;
-
+	const nb_stats = 5;
 	_stats.m_platforms.sort( ( a, b ) => b.m_decades[ _decade ] - a.m_decades[ _decade ] );
-	const decade_platforms = _stats.m_platforms.slice( 0, 5 );
-
-	let platform_row = platforms_range.getRow() + 1;
-	const platform_name_col = platforms_range.getColumn();
-	const platform_number_col = platform_name_col + 1;
+	const decade_platforms = _stats.m_platforms.slice( 0, nb_stats );
+	
+	let platform_row = 0;
+	let platforms_data = new StatData( HomeStat.TopPlatforms, nb_stats, _stats.m_nb_games_by_decades[ _decade ] );
 
 	decade_platforms.forEach( function ( _platform )
 	{
-		let percentage = _platform.m_decades[ _decade ] / _stats.m_nb_games_by_decades[ _decade ] * 100;
-		
-		let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
-		
+		platforms_data.m_stat_value	= _platform.m_decades[ _decade ];
+
 		if ( _platform.m_decades[ _decade ] == 0 )
 		{
-			_sheet.getRange( platform_row, platform_name_col ).setValue( "-" );
-			_sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
-			platform_range.setBackground( HOME_STATS_EMPTY_CELL_BACKGROUND );
-			platform_range.setFontColor( HOME_STATS_EMPTY_CELL_FOREGROUND );
+			platforms_data.m_stat_name			= "-";
+			platforms_data.m_stat_background	= HOME_STATS_EMPTY_CELL_BACKGROUND;
+			platforms_data.m_stat_foreground	= HOME_STATS_EMPTY_CELL_FOREGROUND;
 		}
 		else
 		{
-			_sheet.getRange( platform_row, platform_name_col ).setValue( _platform.m_name );
-			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_decades[ _decade ] + " (" + percentage.toFixed(1) + "%)" );
-			platform_range.setBackground( _platform.m_background_color );
-			platform_range.setFontColor( _platform.m_foreground_color );
+			platforms_data.m_stat_name			= _platform.m_name;
+			platforms_data.m_stat_background	= _platform.m_background_color;
+			platforms_data.m_stat_foreground	= _platform.m_foreground_color;
 		}
+
+		fill_stat_array( platforms_data, platform_row );
 
 		++platform_row;
 	} );
+
+	fill_stat_range( _sheet, _stats_values, platforms_data, _decade_cell.m_row );
 }
 
 /* **********************************************************
 *  Fill the families stats columns of the given decade
 */
-function fill_families_decade( _sheet, _stats, _decade_range, _decade )
+function fill_families_decade( _sheet, _stats, _stats_values, _decade, _decade_cell )
 {
-	const families_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.Families );
-
-	if( families_range.getRow() == _decade_range.getRow() )
-		return;
+	Logger.log( "		Filling families stats..." );
 
 	_stats.m_families_counts.set( Family.PC, 0 );
 	_stats.m_families_counts.set( Family.Sony, 0 );
 	_stats.m_families_counts.set( Family.Xbox, 0 );
 	_stats.m_families_counts.set( Family.Nintendo, 0 );
 	_stats.m_families_counts.set( Family.Sega, 0 );
-
+	
 	_stats.m_platforms.forEach( function ( _platform )
 	{
 		if ( _platform.m_family == Family.None )
 			return;
-
+		
 		_stats.m_families_counts.set( _platform.m_family, _stats.m_families_counts.get( _platform.m_family ) + _platform.m_decades[ _decade ] );
 	} );
-
+	
 	_stats.m_families_counts = new Map( [ ..._stats.m_families_counts.entries() ].sort( ( a, b ) => b[ 1 ] - a[ 1 ] ) );
-
-	let family_row = families_range.getRow() + 1;
-	const family_name_col = families_range.getColumn();
-	const family_count_col = family_name_col + 1;
+	
+	const nb_stats = 5;
+	let family_row = 0;
+	let families_data = new StatData( HomeStat.Families, nb_stats, _stats.m_nb_games_by_decades[ _decade ] );
 
 	_stats.m_families_counts.forEach( function ( _value, _key, _map )
 	{
-		let percentage = _value / _stats.m_nb_games_by_decades[ _decade ] * 100;
-		_sheet.getRange( family_row, family_name_col ).setValue( _key );
-
-		if ( _value == 0 )
-			_sheet.getRange( family_row, family_count_col ).setValue( "-" );
-		else
-			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed(1) + "%)" );
-
 		const family_colors = get_family_colors( _key );
-		let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
-		platform_range.setBackground( family_colors.m_background_color );
-		platform_range.setFontColor( family_colors.m_foreground_color );
+
+		families_data.m_stat_name			= _key;
+		families_data.m_stat_value			= _value;
+		families_data.m_stat_background		= family_colors.m_background_color;
+		families_data.m_stat_foreground		= family_colors.m_foreground_color;
+
+		fill_stat_array( families_data, family_row );
 
 		++family_row;
 	} );
+
+	fill_stat_range( _sheet, _stats_values, families_data, _decade_cell.m_row );
 }
 
 /* **********************************************************
 *  Fill the version stats columns of the given decade
 */
-function fill_versions_decade( _sheet, _stats, _decade_range, _decade )
+function fill_versions_decade( _sheet, _stats, _stats_values, _decade, _decade_cell )
 {
-	const version_range = find_text_in_range( _sheet, _sheet.getRange( _decade_range.getRow(), _decade_range.getColumn(), HOME_STATS_DECADE_HEIGHT, HOME_STATS_DECADE_WIDTH ), HomeStat.Versions );
-
-	if( version_range.getRow() == _decade_range.getRow() )
-		return;
-
 	_stats.m_versions.sort( ( a, b ) => b.m_decades[ _decade ] - a.m_decades[ _decade ] );
 
-	let version_row = version_range.getRow() + 1;
-	const version_name_col = version_range.getColumn();
-	const version_number_col = version_name_col + 1;
+	const nb_stats = 4;
+	let version_row = 0;
+	let versions_data = new StatData( HomeStat.Versions, nb_stats, _stats.m_nb_games_by_decades[ _decade ] );
 
 	_stats.m_versions.forEach( function ( _version )
 	{
-		let percentage = _version.m_decades[ _decade ] / _stats.m_nb_games_by_decades[ _decade ] * 100;
-		_sheet.getRange( version_row, version_name_col ).setValue( _version.m_version );
+		versions_data.m_stat_name		= _version.m_version;
+		versions_data.m_stat_value		= _version.m_decades[ _decade ];
+		versions_data.m_stat_background	= _version.m_background_color;
+		versions_data.m_stat_foreground	= _version.m_foreground_color;
 
-		if ( _version.m_decades[ _decade ] == 0 )
-			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
-		else
-			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_decades[ _decade ] + " (" + percentage.toFixed(1) + "%)" );
-
-		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
-		platform_range.setBackground( _version.m_background_color );
-		platform_range.setFontColor( _version.m_foreground_color );
+		fill_stat_array( versions_data, version_row );
 
 		++version_row;
 	} );
+
+	fill_stat_range( _sheet, _stats_values, versions_data, _decade_cell.m_row );
 }
 
 function get_years_days_hours( _seconds )
@@ -296,7 +282,7 @@ function get_years_days_hours( _seconds )
 	return { m_years: years, m_days: days, m_hours: hours };
 }
 
-function fill_durations_stats( _sheet, _stats, _stats_values )
+function fill_durations_stats( _sheet, _stats )
 {
 	const average_estimate = Duration.divide( _stats.m_total_estimate, _stats.m_estimates_count );
 	const average_played = Duration.divide( _stats.m_total_played, _stats.m_played_count );

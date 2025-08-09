@@ -276,6 +276,13 @@ function get_family_infos( _platform )
 				platform.m_foreground_color = "#11734b";
 				break;
 			}
+		case PlatformName.Arcade:
+			{
+				platform.m_family = Family.None;
+				platform.m_background_color = "#ffc8aa";
+				platform.m_foreground_color = "#753800";
+				break;
+			}
 		default:
 			{
 				platform.m_name = PlatformName.None;
