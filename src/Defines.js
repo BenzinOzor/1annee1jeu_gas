@@ -46,13 +46,10 @@ const MIN_BIRTH_YEAR = 1950;
 const MAX_DURATION_SECONDS = 3602439;	// 999:99:99
 
 // STATS
-const HOME_STATS_RANGE = "H26:P103";
+const HOME_STATS_RANGE = "H26:P104";
+const HOME_STATS_CELL = [ 26, 8 ];	// "H26"
+const HOME_STATS_WIDTH = 9;
 
-const HOME_STATS_FINISHED_GAMES = "Jeux terminés";
-const HOME_STATS_NB_GAMES = "Nombre total de jeux";
-const HOME_STATS_TOP_PLATFORMS = "Top 5 Plateformes";
-const HOME_STATS_FAMILIES = "Familles";
-const HOME_STATS_VERSIONS = "Versions";
 const HOME_STATS_DECADE_WIDTH = 9;
 const HOME_STATS_DECADE_HEIGHT = 9;
 const HOME_STATS_EMPTY_CELL_BACKGROUND = "#efefef";
@@ -60,6 +57,8 @@ const HOME_STATS_EMPTY_CELL_FOREGROUND = "#b7b7b7";
 
 const HomeStat = 
 {
+	FinishedGames: 'Jeux terminés',
+	NumberOfGames: 'Nombre total de jeux',
 	Platforms: 'Plateformes',
 	TopPlatforms: 'Top 5 Plateformes',
 	Families: 'Familles',

@@ -317,6 +317,23 @@ function find_text_in_range( _sheet, _range, _text )
 	return _range;
 }
 
+function find_text_in_value_array( _array, _text, _from_row = 0 )
+{
+	if( _array.length <= 0 || _array[ 0 ].length <= 0 )
+		return { m_row: -1, m_col: -1 };
+
+	for ( let row = _from_row; row < _array.length; ++row )
+	{
+		for ( let col = 0; col < _array[ 0 ].length; ++col )
+		{
+			if ( _array[ row ][ col ] == _text )
+				return { m_row: row, m_col: col }
+		}
+	}
+
+	return { m_row: -1, m_col: -1 };
+}
+
 /* **********************************************************
 *  Turn number into a string with leading zeros.
 */

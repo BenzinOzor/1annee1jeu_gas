@@ -1,89 +1,133 @@
+class StatData
+{
+	constructor( _type, _stat_count, _games_count )
+	{
+		// Constants
+		this.m_type			= _type;
+		this.m_count		= _stat_count;
+		this.m_games_count	= _games_count;
+
+		// Filled arrays
+		this.m_values 		= Array( this.m_count ).fill( null ).map( () => Array( 2 ) );
+		this.m_backgrounds 	= Array( this.m_count ).fill( null ).map( () => Array( 2 ) );
+		this.m_foregrounds 	= Array( this.m_count ).fill( null ).map( () => Array( 2 ) );
+
+		// Temp data
+		this.m_stat_name		= "";
+		this.m_stat_value		= 0;
+		this.m_stat_background	= "";
+		this.m_stat_foreground	= "";
+	}
+}
+
+function fill_stat_range( _sheet, _stats_values, _stat_data )
+{
+	const stat_header_cell = find_text_in_value_array( _stats_values, _stat_data.m_type );
+
+	const stat_sheet_row = HOME_STATS_CELL[ 0 ] + stat_header_cell.m_row + 1;
+	const stat_sheet_col = HOME_STATS_CELL[ 1 ] + stat_header_cell.m_col;
+
+	let stats_range = _sheet.getRange( stat_sheet_row, stat_sheet_col, _stat_data.m_count, 2 );
+
+	stats_range.setValues( _stat_data.m_values );
+	stats_range.setBackgrounds( _stat_data.m_backgrounds );
+	stats_range.setFontColors( _stat_data.m_foregrounds );
+}
+
+function fill_stat_array( _stat_data, _row )
+{
+	_stat_data.m_values[ _row ][ 0 ] = _stat_data.m_stat_name;
+	
+	if( _stat_data.m_stat_value == 0 )
+		_stat_data.m_values[ _row ][ 1 ] = "-";
+	else
+	{
+		const percentage = _stat_data.m_stat_value / _stat_data.m_games_count * 100;
+		_stat_data.m_values[ _row ][ 1 ] = _stat_data.m_stat_value + " (" + percentage.toFixed( 1 ) + "%)";
+	}
+
+	_stat_data.m_backgrounds[ _row ][ 0 ] = _stat_data.m_stat_background;
+	_stat_data.m_backgrounds[ _row ][ 1 ] = _stat_data.m_stat_background;
+
+	_stat_data.m_foregrounds[ _row ][ 0 ] = _stat_data.m_stat_foreground;
+	_stat_data.m_foregrounds[ _row ][ 1 ] = _stat_data.m_stat_foreground;
+}
+
 /* **********************************************************
 *  Fill the platform stats columns
 */
-function fill_platfroms_stats( _sheet, _stats )
+function fill_platfroms_stats( _sheet, _stats, _stats_values )
 {
-	const platforms_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HomeStat.Platforms );
-
-	let platform_row = platforms_range.getRow() + 1;
-	const platform_name_col = platforms_range.getColumn();
-	const platform_number_col = platform_name_col + 1;
+	Logger.log( "	Filling platform stats..." );
+	
+	let platform_row = 0;
+	let platforms_data = new StatData( HomeStat.Platforms, Object.values( PlatformName ).length - 1, _stats.m_nb_games );
 
 	_stats.m_platforms.forEach( function ( _platform )
 	{
-		let percentage = _platform.m_count / _stats.m_nb_games * 100;
-		_sheet.getRange( platform_row, platform_name_col ).setValue( _platform.m_name );
+		platforms_data.m_stat_name			= _platform.m_name;
+		platforms_data.m_stat_value			= _platform.m_count;
+		platforms_data.m_stat_background	= _platform.m_background_color;
+		platforms_data.m_stat_foreground	= _platform.m_foreground_color;
 
-		if ( _platform.m_count == 0 )
-			_sheet.getRange( platform_row, platform_number_col ).setValue( "-" );
-		else
-			_sheet.getRange( platform_row, platform_number_col ).setValue( _platform.m_count + " (" + percentage.toFixed(1) + "%)" );
-
-		let platform_range = _sheet.getRange( platform_row, platform_name_col, 1, 2 );
-		platform_range.setBackground( _platform.m_background_color );
-		platform_range.setFontColor( _platform.m_foreground_color );
+		fill_stat_array( platforms_data, platform_row );
 
 		++platform_row;
 	} );
+
+	fill_stat_range( _sheet, _stats_values, platforms_data );
 }
 
 /* **********************************************************
 *  Fill the families stats columns
 */
-function fill_families_stats( _sheet, _stats )
+function fill_families_stats( _sheet, _stats, _stats_values )
 {
-	const families_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_FAMILIES );
+	Logger.log( "	Filling families stats..." );
 
-	let family_row = families_range.getRow() + 1;
-	const family_name_col = families_range.getColumn();
-	const family_count_col = family_name_col + 1;
+	let family_row = 0;
+	let famlilies_data = new StatData( HomeStat.Families, Object.values( Family ).length - 1, _stats.m_nb_games );
 
 	_stats.m_families_counts.forEach( function ( _value, _key, _map )
 	{
-		let percentage = _value / _stats.m_nb_games * 100;
-		_sheet.getRange( family_row, family_name_col ).setValue( _key );
-
-		if ( _value == 0 )
-			_sheet.getRange( family_row, family_count_col ).setValue( "-" );
-		else
-			_sheet.getRange( family_row, family_count_col ).setValue( _value + " (" + percentage.toFixed(1) + "%)" );
-
 		const family_colors = get_family_colors( _key );
-		let platform_range = _sheet.getRange( family_row, family_name_col, 1, 2 );
-		platform_range.setBackground( family_colors.m_background_color );
-		platform_range.setFontColor( family_colors.m_foreground_color );
+
+		famlilies_data.m_stat_name			= _key;
+		famlilies_data.m_stat_value			= _value;
+		famlilies_data.m_stat_background	= family_colors.m_background_color;
+		famlilies_data.m_stat_foreground	= family_colors.m_foreground_color;
+
+		fill_stat_array( famlilies_data, family_row );
 
 		++family_row;
 	} );
+
+	fill_stat_range( _sheet, _stats_values, famlilies_data );
 }
 
 /* **********************************************************
 *  Fill the version stats columns
 */
-function fill_versions_stats( _sheet, _stats )
+function fill_versions_stats( _sheet, _stats, _stats_values )
 {
-	const version_range = find_text_in_range( _sheet, _sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_VERSIONS );
+	Logger.log( "	Filling versions stats..." );
 
-	let version_row = version_range.getRow() + 1;
-	const version_name_col = version_range.getColumn();
-	const version_number_col = version_name_col + 1;
+	let version_row = 0;
+	let versions_data = new StatData( HomeStat.Versions, Object.values( VersionName ).length - 1, _stats.m_nb_games );
 
 	_stats.m_versions.forEach( function ( _version )
 	{
-		let percentage = _version.m_count / _stats.m_nb_games * 100;
-		_sheet.getRange( version_row, version_name_col ).setValue( _version.m_version );
+		versions_data.m_stat_name		= _version.m_version;
+		versions_data.m_stat_value		= _version.m_count;
+		versions_data.m_stat_background	= _version.m_background_color;
+		versions_data.m_stat_foreground	= _version.m_foreground_color;
 
-		if ( _version.m_count == 0 )
-			_sheet.getRange( version_row, version_number_col ).setValue( "-" );
-		else
-			_sheet.getRange( version_row, version_number_col ).setValue( _version.m_count + " (" + percentage.toFixed(1) + "%)" );
-
-		let platform_range = _sheet.getRange( version_row, version_name_col, 1, 2 );
-		platform_range.setBackground( _version.m_background_color );
-		platform_range.setFontColor( _version.m_foreground_color );
+		fill_stat_array( versions_data, version_row );
 
 		++version_row;
 	} );
+	
+	fill_stat_range( _sheet, _stats_values, versions_data );
 }
 
 /* **********************************************************
@@ -252,7 +296,7 @@ function get_years_days_hours( _seconds )
 	return { m_years: years, m_days: days, m_hours: hours };
 }
 
-function fill_durations_stats( _sheet, _stats )
+function fill_durations_stats( _sheet, _stats, _stats_values )
 {
 	const average_estimate = Duration.divide( _stats.m_total_estimate, _stats.m_estimates_count );
 	const average_played = Duration.divide( _stats.m_total_played, _stats.m_played_count );

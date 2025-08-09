@@ -115,10 +115,10 @@ function compute_stats()
 
 	let stats = new Stats;
 
-	let found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_FINISHED_GAMES );
+	let found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HomeStat.FinishedGames );
 	stats.m_nb_finished_games = home_sheet.getRange( found_range.getRow(), found_range.getColumn() + 2 ).getValue();
 
-	found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HOME_STATS_NB_GAMES );
+	found_range = find_text_in_range( home_sheet, home_sheet.getRange( HOME_STATS_RANGE ), HomeStat.NumberOfGames );
 	stats.m_nb_games = home_sheet.getRange( found_range.getRow(), found_range.getColumn() + 2 ).getValue();
 
 	Logger.log( "Collecting stats of all sheets..." );
@@ -134,12 +134,21 @@ function compute_stats()
 
 	Logger.log( "Done collecting" );
 	handle_stats( stats );
-	fill_platfroms_stats( home_sheet, stats );
-	/*fill_families_stats( home_sheet, stats );
-	fill_versions_stats( home_sheet, stats );
+
+	let stats_values = home_sheet.getSheetValues( HOME_STATS_CELL[ 0 ], HOME_STATS_CELL[ 1 ], -1, HOME_STATS_WIDTH );
+
+	if( stats_values.length <= 0 || stats_values[ 0 ].length <= 0 )
+	{
+		Logger.log( "SOMETHING WENT WRONG !!!!! No values were found !" );
+		return;
+	}
+
+	fill_platfroms_stats( home_sheet, stats, stats_values );
+	fill_families_stats( home_sheet, stats, stats_values );
+	fill_versions_stats( home_sheet, stats, stats_values );
 	fill_durations_stats( home_sheet, stats );
 
-	fill_decade_stats( home_sheet, stats, Decade.Nineties );
+	/*fill_decade_stats( home_sheet, stats, Decade.Nineties );
 	fill_decade_stats( home_sheet, stats, Decade.TwoKs );
 	fill_decade_stats( home_sheet, stats, Decade.TwoKTens );
 	fill_decade_stats( home_sheet, stats, Decade.TwoKTwneties );*/
